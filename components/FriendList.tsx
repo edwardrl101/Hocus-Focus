@@ -99,15 +99,15 @@ const FriendList = () => {
           enableEmptySections={true}
           data={_friends}
           keyExtractor={item => item.id}
-          renderItem={({ item }) => {
-            return (
+          renderItem={({ item }) => { return(
+            (_friends.length > 0) ? (
               <TouchableOpacity>
                 <View style={styles.box}>
                   <Text style={styles.username}>{item.username}</Text>
                   <Text style={styles.username}>uid: {item.id}</Text>
                 </View>
               </TouchableOpacity>
-            )
+            ) : <Text> trying </Text>)
           }}
         />
          <FAB style = {styles.fab}

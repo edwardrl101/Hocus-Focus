@@ -7,13 +7,30 @@ import { differenceInCalendarDays, isToday, isThisWeek, isTomorrow, isThisMonth,
 import { supabase } from '@/app/(auth)/client'
 import TaskDescription from './styles/TaskDescription';
 
-const TodoList = () => {
+const TodoList = ({route}) => {
   const[modalVisible, setModalVisible] = useState(false);
   const[tasks, setTasks] = useState([]);
   const[selectedTask, setSelectedTask] = useState(null);
   const[taskDetailModalVisible, setTaskDetailModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const {user} = route.params;
+
+  const channel = supabase.channel('load_planner_tasks')
+  .on('postgres_changes',
+    {
+      event: '*',
+      schema: 'public',
+      table: 'planner',
+      filter: `unique_id=eq.${user.id}`,
+    },
+    (payload) => {
+      console.log("payload:", payload);
+      loadTasks();
+
+    }
+  ).subscribe()
+  
   // Load the tasks from Supabase
   useEffect(() => {
     loadTasks();
@@ -21,10 +38,12 @@ const TodoList = () => {
 
   const loadTasks = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      //const { data: { user } } = await supabase.auth.getUser();
+      //(user);
       const { data, error } = await supabase.rpc('display_planner', { auth_id: user.id });
       if (error) { throw error; }
       setTasks(data);
+      console.log(data);
     } catch (error) {
       console.error(error);
     }
@@ -32,7 +51,6 @@ const TodoList = () => {
 
   async function handleAddTask (task) {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
       const taskid = Date.now().toString()
       setTasks((prevTasks) => [...prevTasks, { id: taskid, ...task }]);
 
@@ -52,7 +70,6 @@ const TodoList = () => {
 
   const toggleCompletion = async (id) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       const taskToToggle = tasks.find(task => task.id === id);
       const updatedStatus = !taskToToggle.completedStatus;
 
@@ -91,7 +108,7 @@ const TodoList = () => {
   async function handleDeleteTask (id) {
     try {
       setTasks((prevTasks) => prevTasks.filter(task => task.id !== id));
-      const { data: { user } } = await supabase.auth.getUser()
+      //const { data: { user } } = await supabase.auth.getUser()
       const { data, error } = await supabase.rpc('delete_planner', 
         { auth_id : user.id, task_id : id})
     } catch (error) {
@@ -106,7 +123,6 @@ const TodoList = () => {
 
   async function handleSaveTask (id, newTask, newDueDate, newStartDate, newCategory) {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
       const { data, error } = await supabase.rpc('edit_planner', 
         { auth_id : user.id, newtask : newTask, due_date : newDueDate, start_date : newStartDate, newcategory : newCategory, task_id : id })
   

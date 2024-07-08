@@ -7,20 +7,35 @@ import { differenceInCalendarDays, isToday, isThisWeek, isTomorrow, isThisMonth,
 import { supabase } from '@/app/(auth)/client'
 import TaskDescription from './styles/TaskDescription';
 
-const CompletedTasks = () => {
+const CompletedTasks = ({route}) => {
   const[modalVisible, setModalVisible] = useState(false);
   const[tasks, setTasks] = useState([]);
   const[selectedTask, setSelectedTask] = useState(null);
   const[taskDetailModalVisible, setTaskDetailModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const { user } = route.params;
 
+  const channel = supabase.channel('load_completed_tasks')
+  .on('postgres_changes',
+    {
+      event: '*',
+      schema: 'public',
+      table: 'planner',
+      filter: `unique_id=eq.${user.id}`,
+    },
+    (payload) => {
+      console.log("payload2: ", payload);
+      loadCompletedTasks();
+
+    }
+  ).subscribe()
+  
   useEffect(() => {
     loadCompletedTasks();
   }, []);
 
   const loadCompletedTasks = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       const { data, error } = await supabase.rpc('display_planner', { auth_id: user.id });
       if (error) { throw error; };
       const sortedTasks = data.filter(task => task.completedStatus === true)
@@ -36,10 +51,8 @@ const CompletedTasks = () => {
   }, 200)
 
 
-
   const toggleCompletion = async (id) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       const taskToToggle = tasks.find(task => task.id === id);
       const updatedStatus = !taskToToggle.completedStatus;
 
