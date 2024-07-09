@@ -46,11 +46,6 @@ const CompletedTasks = ({route}) => {
     }
   };
 
-  setTimeout(() => {
-    loadCompletedTasks();
-  }, 200)
-
-
   const toggleCompletion = async (id) => {
     try {
       const taskToToggle = tasks.find(task => task.id === id);

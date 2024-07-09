@@ -42,7 +42,6 @@ export default function Login() {
       })
       if (error) throw error
       console.log(data)
-      alert("Successful")
       router.push("/home")
 
     }

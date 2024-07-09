@@ -25,6 +25,13 @@ const sections = [
         { id: 'bug', icon: 'flag', label: 'Report Bugs'},
         { id: 'contact', icon: 'mail', label: 'Contact Us'}
     ]
+   },
+
+   {
+    header: 'Log Out',
+    items: [
+        { id: 'logout', icon: 'lock', label: 'Log Out'}
+    ]
    }
 ]
 
@@ -68,27 +75,20 @@ export default function Settings() {
 
                 <View style = {styles.sectionBody}>
                     {items.map(({ id, icon, label }) => (
+                        <TouchableOpacity
+                        key={id}
+                        onPress={id === 'logout' ? handleLogout : () => {}}>
                         <View style = {styles.listItem}>
                         <View style = {styles.itemWrapper} key ={id}>
                             <Feather name = {icon} color = '#616161' size = {20} style = {styles.iconStyle} ></Feather>
                         <Text style = {styles.itemText}>{label}</Text>
                         </View>
                         </View>
+                        </TouchableOpacity>
                     ))}
                 </View>
             </View>
         ))}
-                    <View style = {styles.sectionContainer}>
-                        <Text style = {styles.subheaderText}>Log Out</Text>
-                        <TouchableOpacity style = {styles.sectionBody} onPress={handleLogout}>
-                        <View  style = {styles.listItem}></View>
-                        <View style = {styles.itemWrapper}>
-                            <Feather name = 'lock' color = '#616161' size = {20} style = {styles.iconStyle} ></Feather>
-                        <Text style = {styles.itemText}>Log Out</Text>
-                        </View>
-                    </TouchableOpacity>
-                    </View>
-
         </SafeAreaView>
     )
 }

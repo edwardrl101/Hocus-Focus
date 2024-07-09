@@ -4,6 +4,7 @@ import TodoList from '@/components/TodoList';
 import CompletedTasks from '@/components/CompletedTasks';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons'; 
 
 
 const Tab = createBottomTabNavigator();
@@ -18,7 +19,7 @@ const Planner = ({route}) => {
         name="TodoList" 
         component={TodoList} 
         options={{ tabBarLabel: 'Active Tasks',
-          headerShown: false
+          headerShown: false,
          }} 
          initialParams={{user: user}}
       />
