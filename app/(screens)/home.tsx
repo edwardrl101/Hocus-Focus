@@ -46,39 +46,19 @@ export default function Home({route}) {
   const { user } = route.params;
   let interval = null;
 
-  const isFail = async () => {
-    const { data, error } = await supabase.rpc('is_timer_failed', { auth_id: user.id }); {
-      return data;
+  const channel = supabase.channel('stop_activetimer')
+  .on('postgres_changes',
+    {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'activetimer',
+      filter: `id=eq.${user.id}`,
+    },
+    (payload) => {
+      console.log("payload6:", payload);
+      stopTimer();
     }
-  }
-
-  const isOn = async () => {
-    const { data, error } = await supabase.rpc('is_timer_on', { auth_id: user.id }); {
-      return data;
-    }
-  }
-
-  const checkTimer = async () =>  {
-    try {
-      
-      if (await isFail()) {
-        stopTimer();
-        setIsActive(false);
-        return;
-        
-      } 
-
-      if (await isOn()) {
-        setIsActive(true);
-        return;
-      } 
-      setIsActive(false);
-
-    } catch (error) {
-      console.log(error);
-    }
-
-  }
+  ).subscribe()
 
   useEffect(() => {
     interval = null;
@@ -86,7 +66,6 @@ export default function Home({route}) {
       interval = setInterval(() => {
         setRemainingSecs(prevSecs => prevSecs - 1);
       }, 1000);
-      checkTimer();
       getRemaining(remainingSecs);
       if(remainingSecs === 0) {
         endTimer();
