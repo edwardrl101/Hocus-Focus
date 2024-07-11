@@ -6,18 +6,29 @@ import ListSection from 'react-native-paper/lib/typescript/components/List/ListS
 import {Ionicons} from '@expo/vector-icons';
 import FriendSearchResult  from '@/components/FriendSearchResult'
 
-const AddFriend = ({ visible, onClose, _user, updateFriends, my_uid, currentFriends }) => {
+const AddFriend = ({ visible, onClose, _user, my_uid }) => {
 
     const [searchQuery, setSearchQuery] = useState('');
     const [searchDisplay, setSearchDisplay] = useState([]);
     const [friendRequests, setFriendRequests] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [friendRequestChange, setFRC] = useState(true);
     const[modalVisible, setModalVisible] = useState(false);
     
+    const channel = supabase.channel('load_friend_requests')
+    .on('postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'Friends',
+        filter: `friend_uid=eq.${my_uid}`,
+      },
+      (payload) => {
+        console.log("payload4:", payload);
+        loadRequests();
+      }
+    ).subscribe()
+    
     const handleClose = () => {
-        setFRC(true);
-        updateFriends();
         setSearchDisplay([]);
         setSearchQuery('');
         onClose();
@@ -35,10 +46,8 @@ const AddFriend = ({ visible, onClose, _user, updateFriends, my_uid, currentFrie
           setModalVisible(true)
       }
     }
-      console.log(searchDisplay);
-      useEffect(() => {
-        const loadRequests = async () => {
-        if (friendRequestChange)
+    
+      const loadRequests = async () => {
           try{
             const {data, error} = await supabase.rpc('fetch_friendrequests', {auth_id : _user.id})
             console.log(_user.id)
@@ -53,11 +62,11 @@ const AddFriend = ({ visible, onClose, _user, updateFriends, my_uid, currentFrie
             console.error(error);
           }
           setLoading(false) //temporarily here
-          setFRC(false)
         };
     
+      useEffect(() => {
         loadRequests();
-    }, [friendRequestChange]);      
+    }, []);      
     
     const handleAccept = async (frienduid) => {
       console.log(frienduid);
@@ -65,13 +74,10 @@ const AddFriend = ({ visible, onClose, _user, updateFriends, my_uid, currentFrie
         {my_uid : my_uid, _frienduid: frienduid})
       console.log(error);
       console.log("accept");
-      setFRC(true);
-      updateFriends();
     }
 
     const handleReject = async (frienduid) => {
       const {data, error} = await supabase.rpc('reject_request', {my_uid : my_uid, _frienduid: frienduid})
-      setFRC(true);
     }
 
     if (loading) {
@@ -114,11 +120,6 @@ const AddFriend = ({ visible, onClose, _user, updateFriends, my_uid, currentFrie
     <View>
       <View style = {styles.title}>
         <Text style = {styles.titleText}>Friend Requests:</Text>
-        <TouchableOpacity style={styles.refresh} onPress = {() => setFRC(true)}>
-          <View>
-            <Ionicons name = "refresh" size = {30} color = 'black'/>
-          </View>
-        </TouchableOpacity>
       </View>
         <FlatList
           style={styles.container}
@@ -154,8 +155,7 @@ const AddFriend = ({ visible, onClose, _user, updateFriends, my_uid, currentFrie
             clearSearch = {() => setSearchDisplay([])}
             onClose = {() => setModalVisible(false)}
             my_uid = {my_uid}
-            searchResult = {searchDisplay}
-            refreshRequests = {() => setFRC(true)}>
+            searchResult = {searchDisplay}>
           </FriendSearchResult>) : null
         }
 
@@ -306,10 +306,6 @@ const styles = StyleSheet.create({
           marginTop: 10,
           fontSize: 25,
           marginLeft: 10,
-      },
-      refresh: {
-        marginTop: 10,
-        marginRight: 10,
       },
 })
 

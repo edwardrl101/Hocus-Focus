@@ -4,15 +4,14 @@ import { IconButton, FAB } from 'react-native-paper'
 import {supabase} from '@/app/(auth)/client'
 
 
-const FriendSearchResult = ({visible, clearSearch, onClose, my_uid, searchResult, refreshRequests}) => {
+const FriendSearchResult = ({visible, clearSearch, onClose, my_uid, searchResult}) => {
     
     const [allowAdd, setAllowAdd] = useState(false);
     const buttonStyle = allowAdd ? styles.validButton : styles.invalidButton;
     
     const handleClose = () => {
         clearSearch();
-        setAllowAdd(false);
-        refreshRequests();
+        setAllowAdd(false);;
         onClose();
     }
 
@@ -33,9 +32,6 @@ const FriendSearchResult = ({visible, clearSearch, onClose, my_uid, searchResult
 
     const sendRequest = async (frienduid) => {
         const {data, error} = await supabase.rpc('send_request', {my_uid : my_uid, _frienduid : frienduid}); 
-
-
-        console.log(error);
         setAllowAdd(false);
     }
 

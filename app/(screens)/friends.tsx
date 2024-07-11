@@ -2,10 +2,13 @@ import React from 'react';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import FriendList from '@/components/FriendList'
 
-export default function Friends() {
-    return(
+export default function Friends({route}) {
+  const { user } = route.params; 
+  
+  return(
         <SafeAreaView>
-        <FriendList/>
+        <FriendList
+        user = {user}></FriendList>
         </SafeAreaView>
     )
 }

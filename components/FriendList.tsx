@@ -6,31 +6,36 @@ import { supabase } from '@/app/(auth)/client'
 import {Ionicons} from '@expo/vector-icons';
 
 
-const FriendList = () => {
-    const[_user, getUser] = useState([]);
+const FriendList = ({user}) => {
     const[_uid, getUserID] = useState("");
     const[_friends, getFriends] = useState([]);
     const[loading, setLoading] = useState(true);
-    const[updateFriends, setUpdateFriends] = useState(false);
-
     const[modalVisible, setModalVisible] = useState(false);
+
+    const channel = supabase.channel('load_friends')
+    .on('postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'Friends',
+        filter: `id=eq.${user.id}`,
+      },
+      (payload) => {
+        console.log("payload3:", payload);
+        loadFriends();
+      }
+    ).subscribe()
 
     useEffect(() => {
         const loadUser = async () => {
           try{
-
-            console.log("here");
-            const { data: { user } } = await supabase.auth.getUser()
-            console.log("username: ", user.user_metadata.username);
-            getUser(user);
-
             const { data, error } = await supabase
             .from('profile')
             .select('uid')
             .eq('id', user.id);
             console.log("id: ", data[0].uid);
             getUserID(data[0].uid);
-
+            setLoading(false);
           } catch (error) {
             console.error(error);
           }
@@ -38,29 +43,23 @@ const FriendList = () => {
     
         loadUser();
     }, []);        
-        console.log("outside: ", _user);
 
+    const loadFriends = async () => {
+            try{
+                console.log("load friend: ", user.id);
+                const { data, error } = await supabase.rpc('display_friend', {auth_id : user.id})
+                console.log(error)
+                console.log("data ", data);
+                getFriends(data);
+            } catch (error) {
+              console.error(error);
+            }
+    };
+    
 
     useEffect(() => {
-        const loadFriends = async () => {
-          console.log(updateFriends)
-            if (_user.length != 0 || updateFriends) {
-                try{
-                    console.log("load friend: ", _user.id);
-                    const { data, error } = await supabase.rpc('display_friend', {auth_id : _user.id})
-                    console.log(error)
-                    console.log("data: ", data);
-                    getFriends(data);
-                    setLoading(false);
-                    setUpdateFriends(false);
-                } catch (error) {
-                    console.error(error);
-                }
-            }
-        };
-    
         loadFriends();
-      }, [_user, updateFriends]);
+      }, []);
 
 
   console.log(loading);
@@ -79,7 +78,7 @@ const FriendList = () => {
             style={styles.avatar}
             source={{ uri: 'https://bootdey.com/img/Content/avatar/avatar1.png' }}
           />
-          <Text style={styles.name}>{_user.user_metadata.username}</Text>
+          <Text style={styles.name}>{user.user_metadata.username}</Text>
           <Text style={styles.name}>uid: {_uid}</Text>
         </View>
       </View>
@@ -87,11 +86,7 @@ const FriendList = () => {
       <View>
         <View style = {styles.title}>
           <Text style = {styles.titleText}>Friends:</Text>
-          <TouchableOpacity style={styles.refresh} onPress = {() => setUpdateFriends(true)}>
-                <View>
-                  <Ionicons name = "refresh" size = {30} color = 'black'/>
-                </View>
-              </TouchableOpacity>
+
         </View>
         <FlatList
           style={styles.container}
@@ -116,10 +111,8 @@ const FriendList = () => {
           onPress={() => setModalVisible(true)}/>
             <AddFriend visible = {modalVisible} 
             onClose = {() => setModalVisible(false)}
-            _user = {_user}
-            updateFriends = {() => setUpdateFriends(true)}
+            _user = {user}
             my_uid = {_uid}
-            currentFriends = {_friends}
             ></AddFriend>
 
       </View>
@@ -208,10 +201,7 @@ const styles = StyleSheet.create({
       fontSize: 25,
       marginLeft: 10,
   },
-  refresh: {
-    marginTop: 10,
-    marginRight: 10,
-  },
+
 })
 
 export default FriendList
