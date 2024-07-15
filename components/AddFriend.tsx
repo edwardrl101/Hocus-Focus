@@ -121,7 +121,7 @@ const AddFriend = ({ visible, onClose, _user, my_uid }) => {
       <View style = {styles.title}>
         <Text style = {styles.titleText}>Friend Requests:</Text>
       </View>
-        <FlatList
+        { (friendRequests.length > 0) ? <FlatList
           style={styles.container}
           enableEmptySections={true}
           data={friendRequests}
@@ -129,7 +129,7 @@ const AddFriend = ({ visible, onClose, _user, my_uid }) => {
           renderItem={({ item }) => {
             return (
               <View style = {styles.friendRequestRow}>  
-              <TouchableOpacity>
+              <TouchableOpacity style={styles.request}>
                 <View style={styles.box}>
                 <Text style={styles.username}>{item.username}</Text>
                 <Text style={styles.username}>uid: {item.uid}</Text>
@@ -148,7 +148,9 @@ const AddFriend = ({ visible, onClose, _user, my_uid }) => {
               </View>
             )
           }}
-        />
+        /> : <View style={styles.noFriendBackground}> 
+        <Text style = {styles.noFriends}> No friend requests yet! </Text>
+      </View>}
         </View>
         {(searchDisplay.length > 0) ?
           (<FriendSearchResult visible = {modalVisible}
@@ -231,13 +233,15 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         flexDirection: 'row',
         shadowColor: 'black',
-        width: '100%',
         shadowOpacity: 0.2,
         shadowOffset: {
           height: 1,
           width: -2,
         },
         elevation: 2,
+      },
+      request: {
+        width: '70%',
       },
       username: {
         color: '#20B2AA',
@@ -292,7 +296,6 @@ const styles = StyleSheet.create({
       },
       friendRequestRow:{
         flexDirection: 'row',
-        justifyContent: 'space-between'
       },
       title: {
         height: '10%',
@@ -306,6 +309,17 @@ const styles = StyleSheet.create({
           marginTop: 10,
           fontSize: 25,
           marginLeft: 10,
+      },
+      noFriends: {
+        color: '#3b2437',
+        fontWeight: 'bold',
+        fontSize: 30,
+        marginBottom: '50%',
+      },
+      noFriendBackground: {
+        height: '90%',
+        justifyContent: 'center',
+        alignItems: 'center',
       },
 })
 

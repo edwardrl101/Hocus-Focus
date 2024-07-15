@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { StyleSheet, Text, View, Image, TouchableOpacity, FlatList } from 'react-native'
 import { IconButton, FAB, List } from 'react-native-paper';
-import AddFriend from '@/components/AddFriend'
 import { supabase } from '@/app/(auth)/client'
-import {Ionicons} from '@expo/vector-icons';
+import AddFriend from '@/components/AddFriend'
+import FriendProfile from '@/components/FriendProfile'
+
 
 
 const FriendList = ({user}) => {
@@ -11,6 +12,8 @@ const FriendList = ({user}) => {
     const[_friends, getFriends] = useState([]);
     const[loading, setLoading] = useState(true);
     const[modalVisible, setModalVisible] = useState(false);
+    const[friendVisible, setFriendVisible] = useState(false);
+    const[friendData, setFriendData] = useState([]);
 
     const channel = supabase.channel('load_friends')
     .on('postgres_changes',
@@ -61,6 +64,12 @@ const FriendList = ({user}) => {
         loadFriends();
       }, []);
 
+  const handleFriendProfile = ({item}) => {
+    console.log(item);
+    setFriendData(item);
+    setFriendVisible(true);
+  };
+
 
   console.log(loading);
   if (loading) {
@@ -83,37 +92,48 @@ const FriendList = ({user}) => {
         </View>
       </View>
 
-      <View>
+      <View style = {styles.content}>
         <View style = {styles.title}>
           <Text style = {styles.titleText}>Friends:</Text>
-
         </View>
-        <FlatList
+        { (_friends.length > 0) ? 
+          <FlatList
           style={styles.container}
           scrollEnabled = {true}
           enableEmptySections={true}
           data={_friends}
           keyExtractor={item => item.id}
           renderItem={({ item }) => { return(
-            (_friends.length > 0) ? (
-              <TouchableOpacity>
+              <TouchableOpacity onPress = {() => handleFriendProfile({item})}>
                 <View style={styles.box}>
                   <Text style={styles.username}>{item.username}</Text>
                   <Text style={styles.username}>uid: {item.id}</Text>
                 </View>
               </TouchableOpacity>
-            ) : <Text> trying </Text>)
+              
+              )
           }}
-        />
+        /> : <View style={styles.noFriendBackground}> 
+          <Text style = {styles.noFriends}> No friends yet! </Text>
+        </View>
+        }
+
+
          <FAB style = {styles.fab}
           small
           icon = "plus"
           onPress={() => setModalVisible(true)}/>
+
             <AddFriend visible = {modalVisible} 
             onClose = {() => setModalVisible(false)}
             _user = {user}
             my_uid = {_uid}
             ></AddFriend>
+            <FriendProfile visible = {friendVisible} 
+            onClose = {() => setFriendVisible(false)}
+            friend_username = {friendData.username}
+            friend_uid = {friendData.id}
+            ></FriendProfile>
 
       </View>
     </View>
@@ -125,10 +145,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#F9DFAD",
   },
   header: {
-    backgroundColor: 'purple',
+    backgroundColor: '#7d5675',
     height: '35%',
     justifyContent: 'center',
 
+  },
+  content: {
+    height: '65%',
   },
   headerContent: {
     padding: 30,
@@ -186,7 +209,7 @@ const styles = StyleSheet.create({
     borderRadius: 28,
   },
   container: {
-    height: '55%',
+    height: '90%',
   },
   title: {
     height: '10%',
@@ -200,6 +223,18 @@ const styles = StyleSheet.create({
       marginTop: 10,
       fontSize: 25,
       marginLeft: 10,
+  },
+
+  noFriends: {
+    color: '#3b2437',
+    fontWeight: 'bold',
+    fontSize: 30,
+    marginBottom: '50%',
+  },
+  noFriendBackground: {
+    height: '90%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
 })
