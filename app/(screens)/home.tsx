@@ -86,7 +86,8 @@ export default function Home({route}) {
   const endTimer = async () => {
     setRemainingSecs(0);
     setIsActive(false);
-    const {data, error} = await supabase.rpc('stop_timer', {auth_id : user.id})
+    const {data, error} = await supabase.rpc('stopping_timer', {auth_id : user.id, remain : remainingSecs})
+    console.log("error");
     alert('Congratulations! [you will earn some rewards]')
     clearInterval(interval);
     interval = null;
@@ -94,9 +95,9 @@ export default function Home({route}) {
   }
 
   const stopTimer = async () => {
-    setRemainingSecs(0);
     setIsActive(false);
-    const {data, error} = await supabase.rpc('stop_timer', {auth_id : user.id})
+    const {data, error} = await supabase.rpc('stopping_timer', {auth_id : user.id, remain: remainingSecs})
+    console.log("call");
     alert('The timer has stopped! [you will lose your rewards]')
     clearInterval(interval);
     interval = null;
