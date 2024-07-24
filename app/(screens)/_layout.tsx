@@ -1,6 +1,8 @@
 import { useFonts, } from 'expo-font';
 import { AppState, Text } from "react-native";
 import React, {useRef, useState, useEffect} from 'react'
+import { differenceInSeconds } from 'date-fns';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from "@/app/(auth)/client"
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import Home from '@/app/(screens)/home'
@@ -24,7 +26,7 @@ export default function RootLayout() {
 
   const appState = useRef(AppState.currentState);
   const [appStateVisible, setAppStateVisible] = useState(appState.current);
-  
+  const [startTime, setStartTime] = useState(new Date());
 
   useEffect(() => {
     const getUserInfo = async () => {
@@ -49,11 +51,29 @@ export default function RootLayout() {
         if (data) {
           const { data, error } = await supabase.rpc('fail_timer', {auth_id: _user.id})
         }
+
+        let endTime = new Date();
+        let difference = differenceInSeconds(endTime, startTime);
+
+        if (endTime.toLocaleDateString() === startTime.toLocaleDateString()) {
+          //updateData(startTime.toISOString().split('T')[0], difference.toString());
+          const {data, error} = await supabase.rpc('update_screentime', {auth_id : _user.id, _date: endTime, _seconds : difference});
+          console.log(error);
+        } else {
+          let midnight = endTime;
+          midnight.setHours(0,0,0);
+          let nextDayTime = differenceInSeconds(endTime, midnight);
+          const {data: nextDayData, error: nextDayError} = await supabase.rpc('update_screentime', 
+            {auth_id : _user.id, _date: endTime, _seconds : nextDayTime});
+          const {data: prevDayData, error: prevDayError} = await supabase.rpc('update_screentime', 
+            {auth_id: _user.id, _date: startTime, _seconds: difference - nextDayTime});
+        }
       }
 
       appState.current = nextAppState;
       setAppStateVisible(appState.current);
       console.log('AppState', appState.current);
+      setStartTime(new Date());
     };
 
 
