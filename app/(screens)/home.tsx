@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, StatusBar, TouchableOpacity, Dimensions, Platform } from 'react-native';
+import { StyleSheet, Text, View, StatusBar, TouchableOpacity, Dimensions, Platform, Image } from 'react-native';
+import { IconButton } from 'react-native-paper';
 import { Picker } from "@react-native-picker/picker";
 import { supabase } from '@/app/(auth)/client';
 
@@ -16,7 +17,7 @@ const getRemaining = (time) => {
 
 const createMinArray = length => {
     const arr = [];
-    let i = 0;
+    let i = 10;
     while(i <= length){
       arr.push(i.toString());
       i += 10;
@@ -33,6 +34,8 @@ const createMinArray = length => {
     return arr;
   }
 
+
+
 const AVAILABLE_MINUTES = createMinArray(60);
 const AVAILABLE_SECONDS = createSecArray(60);
 
@@ -42,11 +45,12 @@ export default function Home({route}) {
   const { mins, secs } = getRemaining(remainingSecs);
   const [selectedMins, setSelectedMins] = useState({"itemValue": "0"});
   const [selectedSecs, setSelectedSecs] = useState({"itemValue": "0"});
+  const [coins, setCoins] = useState(-1);
   
   const { user } = route.params;
   let interval = null;
 
-  const channel = supabase.channel('stop_activetimer')
+  const channel1 = supabase.channel('stop_activetimer')
   .on('postgres_changes',
     {
       event: 'UPDATE',
@@ -59,6 +63,37 @@ export default function Home({route}) {
       stopTimer();
     }
   ).subscribe()
+
+  const channel2 = supabase.channel('display_home_coin')
+  .on('postgres_changes',
+    {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'inventory',
+      filter: `id=eq.${user.id}`,
+    },
+    (payload) => {
+      console.log("payload7:", payload);
+      loadCoin();
+    }
+  ).subscribe()
+
+  const loadCoin = async () => {
+    try{
+      const { data, error } = await supabase
+      .from('inventory')
+      .select('coins')
+      .eq('id', user.id);
+      console.log("coins: ", data[0].coins);
+      setCoins(data[0].coins);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  
+  useEffect(() => {
+    loadCoin();
+  }, [coins]);
 
   useEffect(() => {
     interval = null;
@@ -84,10 +119,9 @@ export default function Home({route}) {
   } 
 
   const endTimer = async () => {
-    setRemainingSecs(0);
     setIsActive(false);
     const {data, error} = await supabase.rpc('stopping_timer', {auth_id : user.id, remain : remainingSecs})
-    console.log("error");
+    console.log(error);
     alert('Congratulations! [you will earn some rewards]')
     clearInterval(interval);
     interval = null;
@@ -97,16 +131,24 @@ export default function Home({route}) {
   const stopTimer = async () => {
     setIsActive(false);
     const {data, error} = await supabase.rpc('stopping_timer', {auth_id : user.id, remain: remainingSecs})
-    console.log("call");
-    alert('The timer has stopped! [you will lose your rewards]')
+    console.log(error);
+    alert('The timer has stopped! You did not earn any rewards!')
     clearInterval(interval);
     interval = null;
     setRemainingSecs(0);
   }
 
-  return (
+  const updateActiveTimer = async () => {
+    const { data, error } = await supabase.rpc('fail_timer', {auth_id: user.id})
+  }
 
+  return (
           <View style={styles.container}>
+          <View style={styles.coinBox}>
+            <Image style = {{width: 30, height: 30}}
+            source = {{uri: 'https://i.pinimg.com/474x/e3/74/be/e374be19e2d4ae5844b2b46dd80a094a.jpg'}}/>
+            {(coins>0) ? <Text style = {styles.coinText}>{coins}</Text> : <Text style = {styles.coinText}> </Text>}
+          </View>
           <StatusBar barStyle="light-content" />
           {
             isActive ? (
@@ -129,29 +171,13 @@ export default function Home({route}) {
                   }
                 </Picker>
                 <Text style={styles.pickerItem}>minutes</Text>
-                <Picker
-                  style={styles.picker}
-                  itemStyle={styles.pickerItem}
-                  selectedValue={selectedSecs.itemValue}
-                  onValueChange={itemValue => {
-                    setSelectedSecs({itemValue});
-                  }}
-                  mode="dropDown"
-                > 
-                  {
-                    AVAILABLE_SECONDS.map(value => (
-                      <Picker.Item key={value} label={value} value={value} />
-                    ))
-                  }
-                </Picker>
-                <Text style={styles.pickerItem}>seconds</Text>
               </View>
             )
           }
           {
             isActive ? (
               <TouchableOpacity 
-                onPress={stopTimer}
+                onPress={updateActiveTimer}
                 style={[styles.button, styles.buttonStop]}
                 >
                   <Text style={[styles.buttonText, styles.buttonTextStop]}>Stop</Text>
@@ -172,7 +198,7 @@ export default function Home({route}) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#3b2437',
+    backgroundColor: '#4d3548',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -226,5 +252,21 @@ const styles = StyleSheet.create({
   pickerContainer: {
     flexDirection: "row",
     alignItems: "center"
-  }
+  },
+  coinBox: {
+    borderWidth: 3,
+    borderColor: '#eeeeee',
+    width: 150,
+    height: 50,
+    backgroundColor:'#3b2437',
+    borderRadius: 50,
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    marginBottom: 100,
+    flexDirection: 'row',
+  },
+  coinText: {
+    color: 'white',
+    fontSize: 15,
+  },
 });
