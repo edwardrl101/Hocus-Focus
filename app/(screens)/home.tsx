@@ -64,13 +64,14 @@ export default function Home({route}) {
     (payload) => {
       console.log("payload6:", payload);
       stopTimer();
+      loadCoin();
     }
   ).subscribe()
 
   const channel2 = supabase.channel('display_home_coin')
   .on('postgres_changes',
     {
-      event: 'UPDATE',
+      event: '*',
       schema: 'public',
       table: 'inventory',
       filter: `id=eq.${user.id}`,

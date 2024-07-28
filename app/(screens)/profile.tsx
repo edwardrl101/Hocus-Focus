@@ -45,12 +45,10 @@ export default function Profile({route}) {
     const calculateLevel = async () => {
       let formula = (Math.sqrt(121 + 4 * userExp / 50) - 11) / 2;
       let currLevel = Math.floor(formula) + 1;
-      let maxExp = 50 * currLevel * (currLevel + 11);
+      let maximum = 50 * currLevel * (currLevel + 11);
 
       setUserLevel(currLevel);
-      setMaxExp(maxExp);
-      console.log("level:", currLevel);
-      console.log("out of: ", maxExp);
+      setMaxExp(maximum);
     }
 
     useEffect(() => {
@@ -78,11 +76,15 @@ export default function Profile({route}) {
     <View style = {styles.profilePage}>
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <IconButton icon = "pen" iconColor='#f9ebd6' onPress = {handleEditProfile} size={30}></IconButton> 
           <Text style={styles.username}>{user.user_metadata.username}</Text>
           <Text style={styles.name}>uid: {_uid}</Text>
           <Text style={styles.name}>Level {userLevel}</Text>
-          <ProgressBar progress={0.5} color="yellow"></ProgressBar>
+          <View style={styles.expBar}>
+            <View style={styles.progressBar}>
+              <ProgressBar progress={(userExp/maxExp)} color="#f6ac6c"></ProgressBar>
+            </View>
+            <Text style={styles.expText}> {userExp} / {maxExp} </Text>
+          </View>
         </View>
       </View>
       
@@ -124,6 +126,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     height: '100%',
     justifyContent:'space-around',
+    
   },
   avatar: {
     width: 130,
@@ -152,5 +155,18 @@ const styles = StyleSheet.create({
     height: "50%",
     justifyContent: "center",
     alignItems: "center",
+  },
+
+  expBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+
+  },
+  expText: {
+    color: "#FFFFFF"
+  },
+  progressBar: {
+    width: "70%"
   },
 })
