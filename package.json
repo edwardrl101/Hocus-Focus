@@ -16,6 +16,8 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
+    "@gluestack-style/react": "^1.0.57",
+    "@gluestack-ui/themed": "^1.1.42",
     "@react-native-async-storage/async-storage": "^1.23.1",
     "@react-native-community/art": "^1.2.0",
     "@react-native-community/datetimepicker": "github:react-native-community/datetimepicker",
@@ -49,7 +51,8 @@
     "react-native-svg": "^15.2.0",
     "react-native-web": "~0.19.10",
     "react-navigation": "^5.0.0",
-    "styled-components": "^6.1.11"
+    "styled-components": "^6.1.11",
+    "victory-native": "^41.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

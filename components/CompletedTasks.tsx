@@ -127,8 +127,8 @@ const CompletedTasks = ({route}) => {
 
     return (
         <PaperProvider>
-          <ScrollView style = {styles.container}>
-        <List.Section>
+          
+        <List.Section style = {styles.container}>
             <List.Subheader style = {styles.headerText}>My Completed Tasks </List.Subheader>
             <Searchbar
             placeholder="Search"
@@ -146,7 +146,7 @@ const CompletedTasks = ({route}) => {
           contentContainerStyle={styles.sectionList}
         />
         </List.Section>
-        </ScrollView>
+        
         </PaperProvider>
     )
 }

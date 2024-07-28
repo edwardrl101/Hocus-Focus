@@ -252,12 +252,8 @@ const TodoList = ({route}) => {
 
   return(
     <PaperProvider>
-    
-    <SafeAreaView style = {styles.container}>
 
-      <ScrollView>
-
-      <List.Section>
+      <List.Section style = {styles.container}>
         <List.Subheader style = {styles.headerText} >My Active Tasks</List.Subheader>
         <Searchbar
             placeholder="Search"
@@ -277,7 +273,7 @@ const TodoList = ({route}) => {
         />
         
       </List.Section>
-      </ScrollView>
+      
 
     <FAB style = {styles.fab}
     small
@@ -298,7 +294,7 @@ const TodoList = ({route}) => {
         />
       )}
       
-      </SafeAreaView>
+     
     </PaperProvider>
   )
 }
