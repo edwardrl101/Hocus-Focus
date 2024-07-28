@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, StatusBar, TouchableOpacity, Dimensions, Platfo
 import { IconButton } from 'react-native-paper';
 import { Picker } from "@react-native-picker/picker";
 import { supabase } from '@/app/(auth)/client';
+import RewardModal from '@/components/RewardModal';
 
 
 const screen = Dimensions.get('window');
@@ -43,8 +44,10 @@ export default function Home({route}) {
   const [remainingSecs, setRemainingSecs] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const { mins, secs } = getRemaining(remainingSecs);
-  const [selectedMins, setSelectedMins] = useState({"itemValue": "0"});
+  const [selectedMins, setSelectedMins] = useState({"itemValue": "10"});
   const [selectedSecs, setSelectedSecs] = useState({"itemValue": "0"});
+  const [modalVisible, setModalVisible] = useState(false);
+  const [isFailed, setIsFailed] = useState(false);
   const [coins, setCoins] = useState(-1);
   
   const { user } = route.params;
@@ -112,7 +115,7 @@ export default function Home({route}) {
   }, [isActive, remainingSecs]);
 
   const startTimer = async () => {
-    let duration = parseInt((selectedMins.itemValue), 10) * 60 + parseInt((selectedSecs.itemValue), 10)
+    let duration = parseInt((selectedMins.itemValue), 10) * 60
     const {data, error} = await supabase.rpc('start_timer', {auth_id : user.id, _duration: duration});
     setRemainingSecs(duration)
     setIsActive(true);
@@ -122,7 +125,8 @@ export default function Home({route}) {
     setIsActive(false);
     const {data, error} = await supabase.rpc('stopping_timer', {auth_id : user.id, remain : remainingSecs})
     console.log(error);
-    alert('Congratulations! [you will earn some rewards]')
+    setModalVisible(true);
+    //alert('Congratulations! [you will earn some rewards]')
     clearInterval(interval);
     interval = null;
     setRemainingSecs(0);
@@ -132,7 +136,9 @@ export default function Home({route}) {
     setIsActive(false);
     const {data, error} = await supabase.rpc('stopping_timer', {auth_id : user.id, remain: remainingSecs})
     console.log(error);
-    alert('The timer has stopped! You did not earn any rewards!')
+    setIsFailed(true);
+    setModalVisible(true);
+    //alert('The timer has stopped! You did not earn any rewards!')
     clearInterval(interval);
     interval = null;
     setRemainingSecs(0);
@@ -191,6 +197,12 @@ export default function Home({route}) {
                 </TouchableOpacity>
             )
           }
+          <RewardModal visible = {modalVisible}
+            onClose = {() => setModalVisible(false)}
+            resetFail = {() => setIsFailed(true)}
+            isFailed = {isFailed}
+            duration = {parseInt((selectedMins.itemValue), 10) * 60}
+            ></RewardModal>
         </View>
   );
 }

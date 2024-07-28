@@ -28,8 +28,7 @@ export default function RootLayout() {
   const [appStateVisible, setAppStateVisible] = useState(appState.current);
   const [startTime, setStartTime] = useState(new Date());
 
-  useEffect(() => {
-    const getUserInfo = async () => {
+  const getUserInfo = async () => {
     setLoading(true);
       try{
         const { data: { user } } = await supabase.auth.getUser()
@@ -38,10 +37,10 @@ export default function RootLayout() {
         console.error(error);
       }
     };
-
+  
+  useEffect(() => {
     getUserInfo();
     setLoading(false);
-
   }, [_user]); 
 
   useEffect(() => {

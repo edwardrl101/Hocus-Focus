@@ -3,31 +3,64 @@ import { SafeAreaView, Button, StyleSheet, Text, View, Image } from 'react-nativ
 import { IconButton } from 'react-native-paper';
 import { supabase } from '@/app/(auth)/client'
 import EditProfile from '@/components/EditProfile'
+import {ProgressBar} from 'react-native-paper';
 
 export default function Profile({route}) {
     const[_uid, getUserID] = useState("");
+    const [userExp, setUserExp] = useState(0);
+    const [userLevel, setUserLevel] = useState(1);
+    const [maxExp, setMaxExp] = useState(1);
     const[loading, setLoading] = useState(true);
     const[modalVisible, setModalVisible] = useState(false);
 
     const { user } = route.params; 
 
+    const loadUser = async () => {
+      try{
+        const { data, error } = await supabase
+        .from('profile')
+        .select('uid')
+        .eq('id', user.id);
+        console.log("id: ", data[0].uid);
+        getUserID(data[0].uid);
+        setLoading(false);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    const loadExp = async () => {
+      try{
+        const { data, error } = await supabase
+        .from('inventory')
+        .select('exp')
+        .eq('id', user.id);
+        console.log("exp ", data[0].exp);
+        setUserExp(data[0].exp);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    const calculateLevel = async () => {
+      let formula = (Math.sqrt(121 + 4 * userExp / 50) - 11) / 2;
+      let currLevel = Math.floor(formula) + 1;
+      let maxExp = 50 * currLevel * (currLevel + 11);
+
+      setUserLevel(currLevel);
+      setMaxExp(maxExp);
+      console.log("level:", currLevel);
+      console.log("out of: ", maxExp);
+    }
+
     useEffect(() => {
-      const loadUser = async () => {
-        try{
-          const { data, error } = await supabase
-          .from('profile')
-          .select('uid')
-          .eq('id', user.id);
-          console.log("id: ", data[0].uid);
-          getUserID(data[0].uid);
-          setLoading(false);
-        } catch (error) {
-          console.error(error);
-        }
-      };
-  
+      loadExp()
       loadUser();
   }, []);
+
+  useEffect(() => {
+    calculateLevel();
+  }, [userExp]);
 
   const handleEditProfile = () => {
     setModalVisible(true);
@@ -48,10 +81,11 @@ export default function Profile({route}) {
           <IconButton icon = "pen" iconColor='#f9ebd6' onPress = {handleEditProfile} size={30}></IconButton> 
           <Text style={styles.username}>{user.user_metadata.username}</Text>
           <Text style={styles.name}>uid: {_uid}</Text>
-          <Text style={styles.name}>Level 1</Text>
+          <Text style={styles.name}>Level {userLevel}</Text>
+          <ProgressBar progress={0.5} color="yellow"></ProgressBar>
         </View>
       </View>
-        
+      
       <View style={styles.content}>
         <View style={styles.character}>
           <Image
