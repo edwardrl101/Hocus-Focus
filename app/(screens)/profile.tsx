@@ -15,6 +15,20 @@ export default function Profile({route}) {
 
     const { user } = route.params; 
 
+    const channel = supabase.channel('display_exp')
+    .on('postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'inventory',
+        filter: `id=eq.${user.id}`,
+      },
+      (payload) => {
+        console.log("exp change:", payload);
+        loadExp();
+      }
+    ).subscribe()
+
     const loadUser = async () => {
       try{
         const { data, error } = await supabase
