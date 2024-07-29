@@ -106,7 +106,7 @@ export default function Store({route}) {
 
     return (
         <View>
-          <View style = {{backgroundColor: "#f9dfad"}}>
+          <View style = {{backgroundColor: "#f9dfad", height: "10%"}}>
             <View style={styles.coinBox}>
                 <Image style = {{width: 30, height: 30}}
                 source = {{uri: 'https://i.pinimg.com/474x/e3/74/be/e374be19e2d4ae5844b2b46dd80a094a.jpg'}}/>
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
       },
       container: {
         backgroundColor: '#f9dfad',
-        height: '100%',
+        height: '90%',
       },
       price: {
         flexDirection: 'row',

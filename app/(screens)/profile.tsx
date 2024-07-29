@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, Button, StyleSheet, Text, View, Image } from 'react-native';
-import { IconButton } from 'react-native-paper';
+import { IconButton, FAB, List } from 'react-native-paper';
 import { supabase } from '@/app/(auth)/client'
 import EditProfile from '@/components/EditProfile'
 import {ProgressBar} from 'react-native-paper';
@@ -111,8 +111,15 @@ export default function Profile({route}) {
         </View>
       </View>
 
+      <FAB style = {styles.fab}
+          small
+          icon = "plus"
+          color = "white"
+          onPress={() => setModalVisible(true)}/>
+
       <EditProfile visible = {modalVisible}
       onClose = {() => setModalVisible(false)}
+      user = {user}
       my_uid = {_uid}>
       </EditProfile>
       
@@ -179,6 +186,14 @@ const styles = StyleSheet.create({
     color: "#FFFFFF"
   },
   progressBar: {
-    width: "70%"
+    width: "70%",
+  },
+  fab: {
+    position: 'absolute',
+    backgroundColor: '#853f43',
+    margin: 16,
+    right: 0,
+    bottom: 0,
+    borderRadius: 28,
   },
 })
