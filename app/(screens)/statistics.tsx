@@ -203,7 +203,7 @@ export default function Statistics({route}) {
   const GENERATE = (length: number = 7) => // Generate an array to be used for the bar chart
     Array.from({ length }, (_, index) => ({
       month: index + 1,
-      appUsage: screenTime[index]
+      listenCount: screenTime[index]
     }));
 
     const times = GENERATE(7);
