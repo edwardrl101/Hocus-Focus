@@ -119,7 +119,7 @@ const EditProfile = ({ visible, onClose, user, my_uid }) => {
           renderItem={({ item }) => { return(
               <TouchableOpacity disabled = {(currChar == item.id)} onPress = {() => handleSelect(item.id)}>
                 <View style={styles.box}>
-                  <Image style={{width: "80%", height : '80%'}} source = {require('@/assets/images/test.png')}></Image>
+                  <Image style={{width: "80%", height : '80%'}} source = {{uri: item.image}}></Image>
                   <Text style={styles.username}>{item.name}</Text>
                   {!(currChar == item.id) ? 
                   <View style={styles.price}>

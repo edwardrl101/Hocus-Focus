@@ -10,6 +10,7 @@ export default function Profile({route}) {
     const [userExp, setUserExp] = useState(0);
     const [userLevel, setUserLevel] = useState(1);
     const [maxExp, setMaxExp] = useState(1);
+    const [charLink, setCharLink] = useState('');
     const[loading, setLoading] = useState(true);
     const[modalVisible, setModalVisible] = useState(false);
 
@@ -29,6 +30,20 @@ export default function Profile({route}) {
       }
     ).subscribe()
 
+    const channel2 = supabase.channel('load_char')
+    .on('postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'profile',
+        filter: `id=eq.${user.id}`,
+      },
+      (payload) => {
+        console.log("char", payload);
+        getChar();
+      }
+    ).subscribe()
+
     const loadUser = async () => {
       try{
         const { data, error } = await supabase
@@ -37,7 +52,6 @@ export default function Profile({route}) {
         .eq('id', user.id);
         console.log("id: ", data[0].uid);
         getUserID(data[0].uid);
-        setLoading(false);
       } catch (error) {
         console.error(error);
       }
@@ -56,6 +70,16 @@ export default function Profile({route}) {
       }
     };
 
+    const getChar = async () => {
+      try{
+        const { data, error } = await supabase.rpc('get_char_link', {auth_id : user.id})
+        setCharLink(data);
+        setLoading(false);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
     const calculateLevel = async () => {
       let formula = (Math.sqrt(121 + 4 * userExp / 50) - 11) / 2;
       let currLevel = Math.floor(formula) + 1;
@@ -68,6 +92,7 @@ export default function Profile({route}) {
     useEffect(() => {
       loadExp()
       loadUser();
+      getChar();
   }, []);
 
   useEffect(() => {
@@ -106,14 +131,14 @@ export default function Profile({route}) {
         <View style={styles.character}>
           <Image
             style={{height: "90%",width: "90%"}}
-            source = {require('@/assets/images/test.png')}
+            source = {{uri: charLink}}
           />
         </View>
       </View>
 
       <FAB style = {styles.fab}
           small
-          icon = "plus"
+          icon = "pen"
           color = "white"
           onPress={() => setModalVisible(true)}/>
 

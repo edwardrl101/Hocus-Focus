@@ -122,7 +122,7 @@ export default function Store({route}) {
           renderItem={({ item }) => { return(
               <TouchableOpacity disabled = {_userchar.includes(item.id)} onPress = {() => handleBuy(item.id, item.name)}>
                 <View style={styles.box}>
-                  <Image style={{width: "80%", height : '80%'}} source = {require('@/assets/images/test.png')}></Image>
+                  <Image style={{width: "80%", height : '80%'}} source = {{uri: item.image}}></Image>
                   <Text style={styles.username}>{item.name}</Text>
                   {!(_userchar.includes(item.id)) ? 
                   <View style={styles.price}>
