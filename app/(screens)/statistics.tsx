@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, useColorScheme } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView, useColorScheme, ActivityIndicator } from 'react-native';
 import { Box, Button, ButtonText } from "@gluestack-ui/themed";
 import { CartesianChart, Bar, Pie, PolarChart } from "victory-native";
 import { useFont, vec } from "@shopify/react-native-skia";
@@ -7,38 +7,195 @@ import { LinearGradient } from "@shopify/react-native-skia";
 import { COLORMODES } from "@gluestack-style/react/lib/typescript/types";
 import { Ionicons } from '@expo/vector-icons'; 
 import { IconButton, FAB } from 'react-native-paper';
+import { supabase } from '@/app/(auth)/client'
 
 const DATA = (length: number = 10) =>
   Array.from({ length }, (_, index) => ({
     month: index + 1,
-    listenCount: Math.floor(Math.random() * (100 - 50 + 1)) + 50,
+    listenCount: Math.floor(Math.random() * (100 - 50 + 1)) / 10,
   }));
 
 const oswald = require("@/assets/fonts/SpaceMono-Regular.ttf");
 
-const datas = [
-  { label: "0-10", value: 31.13, color: "#4bc0c0" },
-  { label: "10-20", value: 6.24, color: "#36a2eb" },
-  { label: "20-50", value: 45.02, color: "#9966ff" },
-  { label: "50-100", value: 17.61, color: "#ff9f40" },
-  { label: "100+", value: 5.61, color: "#ff6384" },
-  { label: "500+", value: 10.9, color: "black"},
-  { label: "800+", value: 20.1, color: "green"}
-];
-
-const dataset = [
-  { label: "complete", value: 8, color: "blue" },
-  { label: "incomplete", value: 2, color: "white"}
-]
-
-export default function Statistics() {
+export default function Statistics({route}) {
   const colorMode = useColorScheme() as COLORMODES;
   const isDark = colorMode === "dark";
   const font = useFont(oswald, 12);
   const [data, setData] = useState(DATA(7));
+  const { user } = route.params;  
+  const [failedSessionsCount, setFailedSessionsCount] = useState(null);
+  const [completedSessionsCount, setCompletedSessionsCount] = useState(null);
+  const [_uid, getUserID] = useState("");
+  const [totalTasks, setTotalTasks] = useState(null);
+  const [completedTasks, setCompletedTasks] = useState(null);
+  const [taskStats, setTaskStats] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchScreenTime = async () => {
+    const today = new Date();
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(today.getDate() - 7);
+    
+    
+    const startDate = sevenDaysAgo.toISOString().split('T')[0]; 
+    const endDate = today.toISOString().split('T')[0]; 
+
+    try {
+      const { data, error } = await supabase
+      .from('screentime')
+      .select('date, total_time')
+      .eq('unique_id', user.id);
+      console.log("time:", data )
+    } catch (error) {
+      console.error(error);
+    }
+    const filteredData = data.filter(item => {
+      const itemDate = new Date(item.date);
+      return itemDate >= new Date(startDate) && itemDate <= new Date(endDate);
+    });
+    console.log("Filtered screen time data:", filteredData);
+  }
+
+  const loadUser = async () => {
+    try{
+      const { data, error } = await supabase
+      .from('profile')
+      .select('uid')
+      .eq('id', user.id);
+      console.log("id: ", data[0].uid);
+      getUserID(data[0].uid);
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchFailedSessionsCount = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.rpc('get_failed_timer_sessions_count', { user_id : _uid });
+    console.log(data)
+
+    if (error) {
+      console.error('Error fetching failed timer sessions count:', error);
+    } else {
+      setFailedSessionsCount(data);
+    }
+    setLoading(false);
+  };
+
+  const fetchCompletedSessionsCount = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.rpc('get_completed_timer_sessions_count', { user_id : _uid });
+    console.log(data)
+
+    if (error) {
+      console.error('Error fetching completed timer sessions count:', error);
+    } else {
+      setCompletedSessionsCount(data);
+    }
+    setLoading(false);
+  };
+
+  const fetchCompletedTasks = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.rpc('count_completed_tasks_last_week', { user_uid: _uid });
+    console.log(data);
+
+    if (error) {
+      console.error('Error fetching completed tasks for last week:', error);
+    } else {
+      setCompletedTasks(data);
+    } 
+    setLoading(false);
+  }
+
+  const fetchTotalTasks = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.rpc('count_tasks_last_week', { user_uid: _uid });
+    console.log(data);
+
+    if (error) {
+      console.error('Error fetching total tasks for last week:', error);
+    } else {
+      setTotalTasks(data);
+    } 
+    setLoading(false);
+  }
+
+  const getCompletedTasksStats = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.rpc('fetch_completed_tasks_stats', { user_uid : _uid});
+    
+    const stats = data;
+
+    const formattedData = stats.map((item) => ({
+      label: item.category,
+      value: parseFloat(item.task_count),
+      color: getRandomColor(),
+    }));
+
+    console.log(formattedData);
+
+    if (error) {
+      console.error('Error fetching statistics of completed tasks', error);
+    } else {
+      setTaskStats(formattedData);
+      console.log(taskStats);
+    }
+    setLoading(false);
+  }
+  
+
+  useEffect(() => {
+    loadUser();
+    fetchCompletedSessionsCount();
+    fetchFailedSessionsCount();
+    fetchCompletedTasks();
+    fetchTotalTasks();
+    getCompletedTasksStats();
+    fetchScreenTime();
+  }, [_uid]);
+
+  if (loading) {
+    return (
+    <View style = {{flex: 1}}>
+    <ActivityIndicator style = {{marginTop: 250}} size = "large" color = "0000ff"></ActivityIndicator>
+    </View>)
+  }
+
+  const incomplete = totalTasks - completedTasks;
+
+  const dataset = [
+    { label: "complete", value: completedTasks, color: "#1E99F2" },
+    { label: "incomplete", value: incomplete, color: "white"}
+  ]
+
+  const rate = ((completedTasks / totalTasks) * 100);
+
+  const roundIfDecimal = (num) => {
+    
+    const hasDecimal = num % 1 !== 0;
+    
+    if (hasDecimal) {
+      return parseFloat(num.toFixed(1)); 
+    } else {
+      return num; 
+    }
+  };
+
+  const roundedRate = roundIfDecimal(rate);
 
   const updateChart = () => {
     setData(DATA(7));
+  };
+
+  const getRandomColor = () => {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
   };
 
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -69,7 +226,7 @@ export default function Statistics() {
               xKey="month"
               padding={5}
               yKeys={["listenCount"]}
-              domain={{ y: [0, 100] }}
+              domain={{ y: [0, 10] }}
               domainPadding={{ left: 50, right: 50, top: 30 }}
               axisOptions={{
                 font,
@@ -83,9 +240,9 @@ export default function Statistics() {
                   frame: "black"
                 },
                 formatXLabel: (value) => {
-                  if (value < 1 || value > 12) return '';
-                  const date = new Date(2024, value - 1);
-                  return date.toLocaleString("default", { month: "short" });
+                  const daysOfWeek = ["Sun","Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                  // Assuming 'value' is an index for days of the week (0 for Sunday, 6 for Saturday)
+                  return daysOfWeek[value  - 1% 7];
                 },
               }}
             >
@@ -105,7 +262,7 @@ export default function Statistics() {
                       <LinearGradient
                         start={vec(0, 0)}
                         end={vec(0, 500)}
-                        colors={["blue", "blue"]}
+                        colors={["#1E99F2", "#E2EBF1"]}
                       />
                     </Bar>
                   </>
@@ -115,7 +272,7 @@ export default function Statistics() {
           </Box>
 
           <Box paddingTop={10} width="100%" alignItems="center">
-            <Text style = {{marginBottom: 10}}>You spent an average of X hours last week being productive! You were most productive on X day!
+            <Text style = {{marginBottom: 10}}>You spent an average of 3.7 hours last week being productive! You were most productive on X day!
             </Text>
           </Box>
         </View>
@@ -123,9 +280,10 @@ export default function Statistics() {
         <View style = {styles.sectionBox}>
           <Text style = {styles.appUsage}>Task Completion</Text>
           <View style = {styles.underline}/>
+          <View style = {styles.chartWrapper}>
           <Box paddingTop={20} width="100%" height={200} alignItems="center">
           <PolarChart
-        data={datas}
+        data={taskStats}
         labelKey="label"
         valueKey="value"
         colorKey="color"
@@ -136,24 +294,27 @@ export default function Statistics() {
           </Pie.Chart>
       </PolarChart>
       </Box>
+      
 
       <View style={styles.textContainer}>
-        <Text style={styles.text}>7</Text>
+        <Text style={styles.text}>{completedTasks}</Text>
         <Text style = {styles.tasksCompleted}>Tasks Completed</Text>
+      </View>
       </View>
 
       <View style={styles.legendContainer}>
-        {datas.map((item, index) => (
+        {taskStats.map((item, index) => (
           <View key={index} style={styles.legendItem}>
             <View style={[styles.legendColor, { backgroundColor: item.color }]} />
             <Text style={styles.legendLabel}>{item.label}</Text>
-            <Text style={styles.legendValue}>{item.value}%</Text>
+            <Text style={styles.legendValue}>{item.value}</Text>
           </View>
         ))}
       </View>
 
       <Text style = {{marginTop: 30, fontSize: 20, fontWeight: 'bold'}}>Your Task Completion rate is...</Text>
 
+      <View style = {styles.chartWrapper}>
       <Box paddingTop={20} width="100%" height={200} alignItems="center">
           <PolarChart
         data={dataset}
@@ -167,23 +328,23 @@ export default function Statistics() {
           </Pie.Chart>
       </PolarChart>
       </Box>
-
       <View style={styles.donutLabel}>
-        <Text style={styles.text}>80%</Text>
+        <Text style={styles.text}>{roundedRate}%</Text>
+      </View>
       </View>
 
-      <Text style = {{marginTop: 20, marginBottom: 20}}>You completed 8 out of 10 of your tasks this week!</Text>
+      <Text style = {{marginTop: 20, marginBottom: 20}}>You completed {completedTasks} out of {totalTasks} tasks this week!</Text>
         </View>
 
         <View style = {{flexDirection: 'row'}}>
           <View style = {styles.sessionBox}>
-          <Text style = {{ fontSize: 30, fontWeight: 'bold', color: "white",  marginTop: 40}}> 10</Text>
+          <Text style = {{ fontSize: 30, fontWeight: 'bold', color: "white",  marginTop: 40}}> {completedSessionsCount}</Text>
           <Text style = {{textAlign: 'center', color: "white", fontSize: 16, fontWeight:'semibold'}}> Completed Productivity Sessions</Text>
           </View>
 
           <View style = {[styles.sessionBox, styles.interruptedBox]}>
-          <Text style = {{ fontSize: 30, fontWeight: 'bold', color: "white",  marginTop: 40}}> 10</Text>
-          <Text style = {{textAlign: 'center', color: "white", fontSize: 16, fontWeight:'semibold'}}> Completed Productivity Sessions</Text>
+          <Text style = {{ fontSize: 30, fontWeight: 'bold', color: "white",  marginTop: 40}}> {failedSessionsCount}</Text>
+          <Text style = {{textAlign: 'center', color: "white", fontSize: 16, fontWeight:'semibold'}}> Interrupted Productivity Sessions</Text>
           </View>
         </View>
 
@@ -272,7 +433,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: '50%',
     left: '50%',
-    transform: [{ translateX: -35 }, { translateY: -215 }],
+    transform: [{ translateX: -55 }, { translateY: -30 }],
   },
   text: {
     fontSize: 35,
@@ -308,7 +469,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: '50%',
     left: '50%',
-    transform: [{ translateX: -10 }, { translateY: 160 }],
+    transform: [{ translateX: -40 }, { translateY: -15 }],
   },
   tasksCompleted: {
     color: '#929292',
@@ -333,6 +494,11 @@ const styles = StyleSheet.create({
   interruptedBox: {
     backgroundColor: '#EA5858',
     marginLeft: 7
-  }
+  },
+  chartWrapper: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
 
