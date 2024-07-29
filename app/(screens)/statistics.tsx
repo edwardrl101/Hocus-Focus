@@ -209,6 +209,15 @@ export default function Statistics({route}) {
     const times = GENERATE(7);
     console.log(times);
 
+    const getRandomColor = () => {
+      const letters = '0123456789ABCDEF';
+      let color = '#';
+      for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    };
+
   const dataset = [
     { label: "complete", value: completedTasks, color: "#1E99F2" },
     { label: "incomplete", value: incomplete, color: "white"}
@@ -263,14 +272,7 @@ const getDayOfWeek = (index) => {
     setBarData(DATA(7));
   };
 
-  const getRandomColor = () => {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-  };
+  
 
   return (
     <ScrollView>
