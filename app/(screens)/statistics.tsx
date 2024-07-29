@@ -9,19 +9,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { IconButton, FAB } from 'react-native-paper';
 import { supabase } from '@/app/(auth)/client'
 
-const DATA = (length: number = 10) =>
-  Array.from({ length }, (_, index) => ({
-    month: index + 1,
-    listenCount: Math.floor(Math.random() * (100 - 50 + 1)) + 50,
-  }));
-
 const oswald = require("@/assets/fonts/SpaceMono-Regular.ttf");
 
 export default function Statistics({route}) {
   const colorMode = useColorScheme() as COLORMODES;
-  const isDark = colorMode === "dark";
   const font = useFont(oswald, 12);
-  const [data, setData] = useState(DATA(7));
   const { user } = route.params;  
   const [failedSessionsCount, setFailedSessionsCount] = useState(null);
   const [completedSessionsCount, setCompletedSessionsCount] = useState(null);
@@ -29,10 +21,64 @@ export default function Statistics({route}) {
   const [totalTasks, setTotalTasks] = useState(null);
   const [completedTasks, setCompletedTasks] = useState(null);
   const [taskStats, setTaskStats] = useState([]);
-
   const [loading, setLoading] = useState(true);
+  const [screenTime, setScreenTime] = useState([]);
 
-  const loadUser = async () => {
+  const fetchScreenTime = async () => { // function to fetch screen times for each day
+    const today = new Date();
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(today.getDate() - 7);
+    
+    const startDate = sevenDaysAgo.toISOString().split('T')[0]; 
+    const endDate = today.toISOString().split('T')[0]; 
+
+    try {
+      const { data, error } = await supabase
+      .from('screentime')
+      .select('date, total_time')
+      .eq('unique_id', user.id);
+      console.log("time:", data )
+      if(!data) {
+        console.error(error)
+        return
+      } 
+      const filteredData = data.filter(item => {
+        const itemDate = new Date(item.date);
+        console.log("Item Date:", item.date, "Parsed Date:", itemDate);
+        return itemDate >= new Date(startDate) && itemDate < new Date(endDate);
+      });
+      console.log("Filtered screen time data:", filteredData);
+
+      const dateRange = [];
+    let currentDate = new Date(startDate);
+    while (currentDate < new Date(endDate)) {
+      dateRange.push(currentDate.toISOString().split('T')[0]);
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    const dateToTimeMap = filteredData.reduce((acc, item) => {
+      acc[item.date] = parseFloat((item.total_time / 3600).toFixed(2)); // Convert and round total_time
+      return acc;
+    }, {});
+
+    const completeData = dateRange.map(date => dateToTimeMap[date] || 0);
+
+    console.log("Complete numeric data with zeros for missing dates:", completeData);
+
+    setScreenTime(completeData); // Update state with just the numbers
+
+    console.log("TIME IS:", completeData)
+      
+  
+      
+    } catch (error) {
+      console.error(error);
+    }
+    
+    
+  }
+
+  const loadUser = async () => { // load the user's uid
     try{
       const { data, error } = await supabase
       .from('profile')
@@ -46,7 +92,7 @@ export default function Statistics({route}) {
     }
   };
 
-  const fetchFailedSessionsCount = async () => {
+  const fetchFailedSessionsCount = async () => { // fetch the number of interrupted sessions
     setLoading(true);
     const { data, error } = await supabase.rpc('get_failed_timer_sessions_count', { user_id : _uid });
     console.log(data)
@@ -59,7 +105,7 @@ export default function Statistics({route}) {
     setLoading(false);
   };
 
-  const fetchCompletedSessionsCount = async () => {
+  const fetchCompletedSessionsCount = async () => { // fetch the number of completed sessions
     setLoading(true);
     const { data, error } = await supabase.rpc('get_completed_timer_sessions_count', { user_id : _uid });
     console.log(data)
@@ -72,7 +118,7 @@ export default function Statistics({route}) {
     setLoading(false);
   };
 
-  const fetchCompletedTasks = async () => {
+  const fetchCompletedTasks = async () => { // fetch the number of completed tasks
     setLoading(true);
     const { data, error } = await supabase.rpc('count_completed_tasks_last_week', { user_uid: _uid });
     console.log(data);
@@ -85,7 +131,7 @@ export default function Statistics({route}) {
     setLoading(false);
   }
 
-  const fetchTotalTasks = async () => {
+  const fetchTotalTasks = async () => { // fetch the total number of tasks
     setLoading(true);
     const { data, error } = await supabase.rpc('count_tasks_last_week', { user_uid: _uid });
     console.log(data);
@@ -98,7 +144,7 @@ export default function Statistics({route}) {
     setLoading(false);
   }
 
-  const getCompletedTasksStats = async () => {
+  const getCompletedTasksStats = async () => { // get each category, and the number of tasks in each category
     setLoading(true);
     const { data, error } = await supabase.rpc('fetch_completed_tasks_stats', { user_uid : _uid});
     
@@ -122,16 +168,30 @@ export default function Statistics({route}) {
   }
   
 
-  useEffect(() => {
-    loadUser();
+  const updateData = () => { // Retrieves data from Supabase and updates the state variables
+    fetchScreenTime();
     fetchCompletedSessionsCount();
     fetchFailedSessionsCount();
     fetchCompletedTasks();
     fetchTotalTasks();
     getCompletedTasksStats();
+  };
+
+  useEffect(() => {
+    loadUser();
+    updateData(); 
+
+    const intervalId = setInterval(() => { // Update the data every Sunday (new week)
+      const today = new Date();
+      if (today.getDay() === 0) { 
+        updateData();
+      }
+    }, 86400000); 
+
+    return () => clearInterval(intervalId); 
   }, [_uid]);
 
-  if (loading) {
+  if (loading) { 
     return (
     <View style = {{flex: 1}}>
     <ActivityIndicator style = {{marginTop: 250}} size = "large" color = "0000ff"></ActivityIndicator>
@@ -139,6 +199,15 @@ export default function Statistics({route}) {
   }
 
   const incomplete = totalTasks - completedTasks;
+
+  const GENERATE = (length: number = 7) => // Generate an array to be used for the bar chart
+    Array.from({ length }, (_, index) => ({
+      month: index + 1,
+      appUsage: screenTime[index]
+    }));
+
+    const times = GENERATE(7);
+    console.log(times);
 
   const dataset = [
     { label: "complete", value: completedTasks, color: "#1E99F2" },
@@ -158,10 +227,40 @@ export default function Statistics({route}) {
     }
   };
 
+  const findAverage = (array) => {
+    if (array.length === 0) return 0; 
+    const sum = array.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+    return sum / array.length;
+  };
+
+  const findMaxIndex = (array) => {
+    if (array.length === 0) return null; // Handle empty array case
+    let maxIndex = 0;
+    for (let i = 1; i < array.length; i++) {
+      if (array[i] > array[maxIndex]) {
+        maxIndex = i;
+      }
+    }
+    return maxIndex;
+  };
+
+const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+
+const getDayOfWeek = (index) => {
+  return daysOfWeek[index % daysOfWeek.length];
+};
+
   const roundedRate = roundIfDecimal(rate);
+  const averageTime = findAverage(screenTime).toFixed(2);
+  const maxDay = findMaxIndex(screenTime)
+  console.log("MAX IS:", maxDay)
+  const mostProductiveDay = getDayOfWeek(maxDay);
+
+  
 
   const updateChart = () => {
-    setData(DATA(7));
+    setBarData(DATA(7));
   };
 
   const getRandomColor = () => {
@@ -173,8 +272,6 @@ export default function Statistics({route}) {
     return color;
   };
 
-  const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
   return (
     <ScrollView>
       <View style={styles.header}>
@@ -185,23 +282,17 @@ export default function Statistics({route}) {
       <View style={styles.container}>
         <View style={styles.sectionBox}>
           <View style={{flexDirection: 'row'}}>
-          <Text style={styles.appUsage}>App Usage</Text>
-          <IconButton
-          style = {styles.reloadButton}
-          icon = "reload"
-          onPress={updateChart}
-          size = {22}
-          ></IconButton>
+          <Text style={styles.appUsage}>App Usage (hrs)</Text>
           </View>
           <View style={styles.underline} />
 
           <Box paddingTop={10} width="100%" height={200}>
             <CartesianChart
-              data={data}
+              data={times}
               xKey="month"
               padding={5}
               yKeys={["listenCount"]}
-              domain={{ y: [0, 100] }}
+              domain={{ y: [0, 10] }}
               domainPadding={{ left: 50, right: 50, top: 30 }}
               axisOptions={{
                 font,
@@ -215,9 +306,9 @@ export default function Statistics({route}) {
                   frame: "black"
                 },
                 formatXLabel: (value) => {
-                  if (value < 1 || value > 12) return '';
-                  const date = new Date(2024, value - 1);
-                  return date.toLocaleString("default", { month: "short" });
+                  const daysOfWeek = ["Sun","Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                  // Assuming 'value' is an index for days of the week (0 for Sunday, 6 for Saturday)
+                  return daysOfWeek[value  - 1% 7];
                 },
               }}
             >
@@ -247,7 +338,7 @@ export default function Statistics({route}) {
           </Box>
 
           <Box paddingTop={10} width="100%" alignItems="center">
-            <Text style = {{marginBottom: 10}}>You spent an average of X hours last week being productive! You were most productive on X day!
+            <Text style = {{marginBottom: 10}}>You spent an average of {averageTime} hours last week being productive! You were most productive on {mostProductiveDay}!
             </Text>
           </Box>
         </View>

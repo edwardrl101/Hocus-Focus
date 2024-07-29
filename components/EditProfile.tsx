@@ -1,214 +1,250 @@
-import { Text, View, StyleSheet, FlatList, Modal, TextInput, TouchableOpacity, Button, SafeAreaView, Image, Alert} from 'react-native'
+import { Text, View, StyleSheet, FlatList, Modal, TextInput, TouchableOpacity, SectionList, SafeAreaView, Image, ScrollView} from 'react-native'
+import { Provider as PaperProvider, Appbar, FAB, List, IconButton, Searchbar } from 'react-native-paper';
 import React, { useState, useEffect } from 'react'
-import { IconButton, FAB } from 'react-native-paper'
-import {supabase} from '@/app/(auth)/client'
+import { supabase } from '@/app/(auth)/client'
+import ListSection from 'react-native-paper/lib/typescript/components/List/ListSection';
+import {Ionicons} from '@expo/vector-icons';
 
+const EditProfile = ({ visible, onClose, user, my_uid }) => {
 
-const EditProfile = ({visible, onClose, my_uid}) => {
-    
-    const [newUsername, setNewUsername] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [_shop, getShop] = useState([]);
+    const [_userchar, getUserChar] = useState([]);
+    const [currChar, getCurrChar] = useState([]);
     
     const handleClose = () => {
-        if (newUsername.length > 0) {
-            Alert.alert(
-              "Confirm",
-              "Are you sure you want to go back? All changes will be lost.",
-              [
-                {
-                  text: "Cancel",
-                  style: "cancel"
-                },
-                {
-                  text: "OK",
-                  onPress: () => {
-                    setNewUsername('');
-                    onClose();
-                  }
-                }
-              ]
-            );
-          } else {
-          onClose();
-        }
-    } 
-
-    const updateDatabase = async () => {
-        try {
-            const { data, error } = await supabase.auth.updateUser({
-                data: { username: newUsername }
-            })
-        } catch (error) {
-            throw (error)
-        }
-
-        try {
-            const { data, error } = await supabase
-            .from('profile')
-            .update({ 
-                username: newUsername, 
-            })
-            .eq('uid', my_uid);
-        } catch (error) {
-            console.log(error)
-        }
-        
+        onClose();
     }
 
-    const handleSave = () => {
-        Alert.alert(
-            "Confirm",
-            "Do you want to save changes?",
-            [
-              {
-                text: "Cancel",
-                style: "cancel"
-              },
-              {
-                text: "OK",
-                onPress: () => {
-                  updateDatabase();
-                  setNewUsername('');
-                  onClose();
-                }
-              }
-            ]
-          );
+    const channel1 = supabase.channel('display_skins')
+    .on('postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'user_characters',
+        filter: `unique_id=eq.${user.id}`,
+      },
+      (payload) => {
+        console.log("uc:", payload);
+        loadUserChar();
+        loadCurrChar();
+      }
+    ).subscribe()
+
+    const channel2 = supabase.channel('update_selected')
+    .on('postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'profile',
+        filter: `id=eq.${user.id}`,
+      },
+      (payload) => {
+        console.log("us:", payload);
+        loadUserChar();
+        loadCurrChar();
+      }
+    ).subscribe()
+
+    const loadCurrChar = async() => {
+      try {
+        const {data, error} = await supabase
+        .from('profile')
+        .select('character_id')
+        .eq('id', user.id);
+        console.log("char: ", data[0].character_id);
+        getCurrChar(data[0].character_id);
+      } catch (error) {
+        console.error(error);
+      }
     }
 
-    return(
-    <View style = {styles.container}>  
-    <Modal
-      animationType="fade"
-      visible={visible}
-      onRequestClose={handleClose}
-      transparent
-    >
-      <SafeAreaView style={styles.modalContainer}>
+    const loadUserChar = async () => {
+      try{
+        const {data, error} = await supabase.rpc('display_char_inv', {auth_id : user.id});
+          console.log(data);
+          getUserChar(data);
+          setLoading(false);
+      } catch (error) {
+        console.error(error);
+      }
+    }
 
-        <View style={styles.modalHeader}>
-        <Text style={styles.modalHeaderText}></Text>
-          <IconButton
-            icon="arrow-left"
-            size={30}
-            onPress={handleClose}
-            style={styles.modalCloseButton}
-          />
-        </View>
-        <View style = {styles.searchProfile}>
-            <Image
-                style={styles.avatar}
-                source={{ uri: 'https://bootdey.com/img/Content/avatar/avatar1.png' }}
-            />
-            <Text style = {styles.Label}>Username:</Text>
-            <TextInput 
-                style = {styles.form} 
-                placeholder = "Enter new username" 
-                value = {newUsername} 
-                onChangeText = {setNewUsername}/>
-            <TouchableOpacity onPress = {handleSave} >
-                <View style={styles.saveButton}>
-                    <Text style={styles.buttonText}> Save </Text>
+    useEffect(() => {
+      loadUserChar();
+      loadCurrChar();
+    }, []);
+
+    const handleSelect = async (id) => {
+      try {
+        const {data, error} = await supabase
+        .from('profile')
+        .update({ character_id: `${id}` })
+        .match({ id: `${user.id}` });
+        onClose(); 
+      } catch (error) {
+        console.error(error);
+      }  
+   
+    }
+  
+
+    if (loading) {
+        return (
+            <Text>Loading...</Text>
+        )
+    }
+    return (
+    <Modal style = {styles.modalContainer}
+    animationType = "slide" 
+    visible = {visible}
+    onRequestClose={handleClose}>
+
+      <SafeAreaView style = {styles.modalContainer}>
+
+      <View style = {styles.modalHeader}>
+      <Text style = {styles.modalHeaderText}> Change Character Skin </Text>
+      </View>
+      <IconButton style = {styles.modalCloseButton}
+      icon = "arrow-left"
+      size = {30}
+      onPress={handleClose}></IconButton>
+
+<FlatList
+          style={styles.container}
+          scrollEnabled = {true}
+          enableEmptySections={true}
+          data={_userchar}
+          keyExtractor={item => item.id}
+          renderItem={({ item }) => { return(
+              <TouchableOpacity disabled = {(currChar == item.id)} onPress = {() => handleSelect(item.id)}>
+                <View style={styles.box}>
+                  <Image style={{width: "80%", height : '80%'}} source = {{uri: item.image}}></Image>
+                  <Text style={styles.username}>{item.name}</Text>
+                  {!(currChar == item.id) ? 
+                  <View style={styles.price}>
+                  </View> : 
+                  
+                  <View style={styles.price}>
+                    <Text>Currently selected</Text>
+                  </View>}
                 </View>
-            </TouchableOpacity>
-        </View>
+              </TouchableOpacity>
+              
+              )
+          }}
+        />
+
 
       </SafeAreaView>
-    </Modal>
-    </View> 
-  );
+      </Modal>
+    )
 }
 
 const styles = StyleSheet.create({
-    container: {
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-
-    },
     modalContainer: {
-          flex: 1,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          justifyContent: 'center',
-          alignItems: 'center',
-          
-        },
-      modalCloseButton: {
-          position: 'absolute',
-          top: 10,
-          left: 5,
-          color: 'white',
-        },
-      modalHeader: {
-          flexDirection: 'row',
-          backgroundColor: '#eeeeee', 
-          padding: 2,
-          borderTopLeftRadius: 10,
-          borderTopRightRadius: 10,
-          width: '90%',
-        },
-      modalHeaderText: {
-          fontSize: 25,
-          fontWeight: 'bold',
-          marginTop: 18,
-          marginLeft: 55,
-          
+        flex: 1,
+        backgroundColor: "white"
       },
-      searchProfile: {
-        backgroundColor: '#eeeeee',
-        height: '50%',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderBottomLeftRadius: 10,
-        borderBottomRightRadius: 10,
-        width: '90%',
-        padding: 30,
+    modalCloseButton: {
+        position: 'absolute',
+        top: 10,
+        left: 5,
+        color: 'white',
       },
-      name: {
-        fontSize: 20,
-        color: 'black',
-        fontWeight: '600',
+    modalHeader: {
+        backgroundColor: 'white', // light gray background
+        padding: 20,
+        borderTopLeftRadius: 10,
+        borderTopRightRadius: 10,
+        width: '100%',
       },
-      avatar: {
-        width: 130,
-        height: 130,
-        borderRadius: 63,
-        borderWidth: 4,
-        borderColor: '#FFFFFF',
-        marginBottom: 10,
-      },
-
-      Label: {
-        color: "Black",
-        paddingTop: 10,
-      },
-
-      form: {
-        backgroundColor: "white",
-        padding: 8,
-        marginVertical: 5,
-        borderRadius: 10,
-        shadowColor: "black",
-        shadowOffset: {
-          width: 0,
-          height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5,
-      },
-
-      saveButton: {
-        backgroundColor: "#853f43",
-        justifyContent: 'center',
-        alignItems: 'center',
+    modalHeaderText: {
+        fontSize: 25,
+        fontWeight: 'bold',
+        marginTop: 1,
+        marginLeft: 40,
+        color: 'black'
+    },
+    search: {
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        
+        height: '10%',
+        paddingHorizontal: 5
+    },
+    searchBar: {
+        width: '80%',
         alignSelf: 'center',
+    },
+    searchButton: {
+        backgroundColor: "purple",
+        padding: 7,
+        alignSelf: "center",
+
+        width: "19%",
         height: 35,
-        width: 100,
         borderRadius: 50,
+      },
+      searchText: {
+        color: "white",
+        textAlign: "center",
+        fontWeight: "bold"
+      },
+      username: {
+        color: '#20B2AA',
+        fontSize: 22,
+        alignSelf: 'center',
+        marginLeft: 10,
+      },
+      listSection: {
+        backgroundColor: 'white',
+        height: '20%',
+        justifyContent: 'center'
+      },
+
+      title: {
+        height: '10%',
+        justifyContent: 'space-between',
+        flexDirection: 'row',
+    
+      },
+      titleText: {
+          fontWeight: 'bold',
+          color: 'black',
+          marginTop: 10,
+          fontSize: 25,
+          marginLeft: 10,
+      },
+      price: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      container: {
+        backgroundColor: '#f9dfad',
+        height: '100%',
+      },
+      box: {
+        padding: 10,
+        height: 300,
         marginTop: 10,
+        marginBottom: 10,
+        marginLeft: 10,
+        marginRight: 10,
+        backgroundColor: '#FFFFFF',
+        flexDirection: 'column',
+        shadowColor: 'black',
+        shadowOpacity: 0.2,
+        shadowOffset: {
+          height: 1,
+          width: -2,
+        },
+        elevation: 2,
+        justifyContent: "center",
+        alignContent: "center",
       },
-      buttonText: {
-        color: 'white'
-      },
+})
 
-    })
-
-export default EditProfile
+export default EditProfile 

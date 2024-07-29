@@ -64,13 +64,14 @@ export default function Home({route}) {
     (payload) => {
       console.log("payload6:", payload);
       stopTimer();
+      loadCoin();
     }
   ).subscribe()
 
   const channel2 = supabase.channel('display_home_coin')
   .on('postgres_changes',
     {
-      event: 'UPDATE',
+      event: '*',
       schema: 'public',
       table: 'inventory',
       filter: `id=eq.${user.id}`,
@@ -124,6 +125,7 @@ export default function Home({route}) {
   const endTimer = async () => {
     setIsActive(false);
     const {data, error} = await supabase.rpc('stopping_timer', {auth_id : user.id, remain : remainingSecs})
+    setIsFailed(false);
     console.log(error);
     setModalVisible(true);
     //alert('Congratulations! [you will earn some rewards]')
@@ -199,7 +201,7 @@ export default function Home({route}) {
           }
           <RewardModal visible = {modalVisible}
             onClose = {() => setModalVisible(false)}
-            resetFail = {() => setIsFailed(true)}
+            resetFail = {() => setIsFailed(false)}
             isFailed = {isFailed}
             duration = {parseInt((selectedMins.itemValue), 10) * 60}
             ></RewardModal>

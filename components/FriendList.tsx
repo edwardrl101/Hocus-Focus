@@ -13,7 +13,7 @@ const FriendList = ({user}) => {
     const[loading, setLoading] = useState(true);
     const[modalVisible, setModalVisible] = useState(false);
     const[friendVisible, setFriendVisible] = useState(false);
-    const[friendData, setFriendData] = useState([]);
+    const[friendData, setFriendData] = useState(null);
 
     const channel = supabase.channel('load_friends')
     .on('postgres_changes',
@@ -65,13 +65,11 @@ const FriendList = ({user}) => {
       }, []);
 
   const handleFriendProfile = ({item}) => {
-    console.log(item);
+    console.log("fd", item);
     setFriendData(item);
     setFriendVisible(true);
   };
 
-
-  console.log(loading);
   if (loading) {
     console.log("load");
     return (
@@ -110,31 +108,29 @@ const FriendList = ({user}) => {
                   <Text style={styles.username}>uid: {item.id}</Text>
                 </View>
               </TouchableOpacity>
-              
               )
           }}
         /> : <View style={styles.noFriendBackground}> 
           <Text style = {styles.noFriends}> No friends yet! </Text>
         </View>
         }
-
-
+        {(friendData != null) && (<FriendProfile visible = {friendVisible}
+            onClose = {() => setFriendVisible(false)}
+            clearFriend = {() => setFriendData([])}
+            friend_uid = {friendData.id}
+            friend_username = {friendData.username}
+      ></FriendProfile>)}
          <FAB style = {styles.fab}
           small
           icon = "plus"
           onPress={() => setModalVisible(true)}/>
 
-            <AddFriend visible = {modalVisible} 
+            <AddFriend 
+            visible = {modalVisible} 
             onClose = {() => setModalVisible(false)}
             _user = {user}
             my_uid = {_uid}
             ></AddFriend>
-            <FriendProfile visible = {friendVisible} 
-            onClose = {() => setFriendVisible(false)}
-            friend_username = {friendData.username}
-            friend_uid = {friendData.id}
-            ></FriendProfile>
-
       </View>
     </View>
   )
