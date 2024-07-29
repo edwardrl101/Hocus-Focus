@@ -154,7 +154,7 @@ export default function Home({route}) {
           <View style={styles.container}>
           <View style={styles.coinBox}>
             <Image style = {{width: 30, height: 30}}
-            source = {{uri: 'https://i.pinimg.com/474x/e3/74/be/e374be19e2d4ae5844b2b46dd80a094a.jpg'}}/>
+            source = {{uri: 'https://odecpyodlpiobahncupr.supabase.co/storage/v1/object/public/character_images/Wizards/coin.png'}}/>
             {(coins>0) ? <Text style = {styles.coinText}>{coins}</Text> : <Text style = {styles.coinText}> </Text>}
           </View>
           <StatusBar barStyle="light-content" />

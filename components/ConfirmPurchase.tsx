@@ -30,7 +30,7 @@ const ConfirmPurchase = ({visible, onClose, user_id, char_id, char_name}) => {
             <View style={{flexDirection: 'row', marginBottom: 10}}>
                 <Text style = {styles.Label}>Would you like to purchase {char_name} for 500</Text>
                 <Image style = {{width: 30, height: 30}}
-                    source = {{uri: 'https://i.pinimg.com/474x/e3/74/be/e374be19e2d4ae5844b2b46dd80a094a.jpg'}}/>
+                    source = {{uri: 'https://odecpyodlpiobahncupr.supabase.co/storage/v1/object/public/character_images/Wizards/coin.png'}}/>
                 <Text>?</Text>
             </View>
             <View style={styles.buttons}>

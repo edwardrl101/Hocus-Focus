@@ -128,7 +128,7 @@ export default function Store({route}) {
                   <View style={styles.price}>
                     <Text> 500 </Text>
                     <Image style = {{width: 30, height: 30}}
-                      source = {{uri: 'https://i.pinimg.com/474x/e3/74/be/e374be19e2d4ae5844b2b46dd80a094a.jpg'}}/>
+                      source = {{uri: 'https://odecpyodlpiobahncupr.supabase.co/storage/v1/object/public/character_images/Wizards/coin.png'}}/>
                   </View> : 
                   
                   <View style={styles.price}>
