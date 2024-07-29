@@ -12,7 +12,7 @@ import { supabase } from '@/app/(auth)/client'
 const DATA = (length: number = 10) =>
   Array.from({ length }, (_, index) => ({
     month: index + 1,
-    listenCount: Math.floor(Math.random() * (100 - 50 + 1)) + 50,
+    listenCount: Math.floor(Math.random() * (100 - 50 + 1)) / 10,
   }));
 
 const oswald = require("@/assets/fonts/SpaceMono-Regular.ttf");
@@ -29,8 +29,32 @@ export default function Statistics({route}) {
   const [totalTasks, setTotalTasks] = useState(null);
   const [completedTasks, setCompletedTasks] = useState(null);
   const [taskStats, setTaskStats] = useState([]);
-
   const [loading, setLoading] = useState(true);
+
+  const fetchScreenTime = async () => {
+    const today = new Date();
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(today.getDate() - 7);
+    
+    
+    const startDate = sevenDaysAgo.toISOString().split('T')[0]; 
+    const endDate = today.toISOString().split('T')[0]; 
+
+    try {
+      const { data, error } = await supabase
+      .from('screentime')
+      .select('date, total_time')
+      .eq('unique_id', user.id);
+      console.log("time:", data )
+    } catch (error) {
+      console.error(error);
+    }
+    const filteredData = data.filter(item => {
+      const itemDate = new Date(item.date);
+      return itemDate >= new Date(startDate) && itemDate <= new Date(endDate);
+    });
+    console.log("Filtered screen time data:", filteredData);
+  }
 
   const loadUser = async () => {
     try{
@@ -129,6 +153,7 @@ export default function Statistics({route}) {
     fetchCompletedTasks();
     fetchTotalTasks();
     getCompletedTasksStats();
+    fetchScreenTime();
   }, [_uid]);
 
   if (loading) {
@@ -201,7 +226,7 @@ export default function Statistics({route}) {
               xKey="month"
               padding={5}
               yKeys={["listenCount"]}
-              domain={{ y: [0, 100] }}
+              domain={{ y: [0, 10] }}
               domainPadding={{ left: 50, right: 50, top: 30 }}
               axisOptions={{
                 font,
@@ -215,9 +240,9 @@ export default function Statistics({route}) {
                   frame: "black"
                 },
                 formatXLabel: (value) => {
-                  if (value < 1 || value > 12) return '';
-                  const date = new Date(2024, value - 1);
-                  return date.toLocaleString("default", { month: "short" });
+                  const daysOfWeek = ["Sun","Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                  // Assuming 'value' is an index for days of the week (0 for Sunday, 6 for Saturday)
+                  return daysOfWeek[value  - 1% 7];
                 },
               }}
             >
@@ -247,7 +272,7 @@ export default function Statistics({route}) {
           </Box>
 
           <Box paddingTop={10} width="100%" alignItems="center">
-            <Text style = {{marginBottom: 10}}>You spent an average of X hours last week being productive! You were most productive on X day!
+            <Text style = {{marginBottom: 10}}>You spent an average of 3.7 hours last week being productive! You were most productive on X day!
             </Text>
           </Box>
         </View>
