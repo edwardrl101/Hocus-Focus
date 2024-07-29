@@ -105,8 +105,8 @@ export default function Profile({route}) {
       <View style={styles.content}>
         <View style={styles.character}>
           <Image
-            style={{height: "100%",width: "50%"}}
-            source = {{uri: "https://nutechology.com/wp-content/uploads/2018/07/kyt_wizard_400.jpg"}}
+            style={{height: "90%",width: "90%"}}
+            source = {require('@/assets/images/test.png')}
           />
         </View>
       </View>
@@ -165,10 +165,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   character: {
-    backgroundColor: "white",
-    height: "50%",
     justifyContent: "center",
-    alignItems: "center",
+    alignContent: "center",
   },
 
   expBar: {
