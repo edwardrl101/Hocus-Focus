@@ -87,7 +87,7 @@ const EditProfile = ({ visible, onClose, clearFriend, friend_uid, friend_usernam
 
       <SafeAreaView style = {styles.modalContainer}>
       <View style = {styles.modalHeader}>
-      <Text style = {styles.modalHeaderText}> Change Character Skin </Text>
+      <Text style = {styles.modalHeaderText}> Friend's Profile </Text>
       </View>
       <IconButton style = {styles.modalCloseButton}
       icon = "arrow-left"
