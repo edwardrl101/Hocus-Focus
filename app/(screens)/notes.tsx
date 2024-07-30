@@ -33,7 +33,7 @@ const Notes = ({route}) => {
       }
     ).subscribe()
 
-    const loadUser = async () => { // load the user's uid
+    const loadUser = async () => { 
       try{
         const { data, error } = await supabase
         .from('profile')
@@ -87,6 +87,44 @@ const Notes = ({route}) => {
         }
       } catch (error) {
         console.log("Error adding note:", error);
+      }
+    };
+
+    const confirmDeleteNote = (note) => {
+      Alert.alert(
+        'Delete Note',
+        'Are you sure you want to delete this note?',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Delete',
+            onPress: () => handleDeleteNote(note),
+            style: 'destructive',
+          },
+        ],
+        { cancelable: true }
+      );
+    };
+    
+
+    const handleDeleteNote = async (note) => {
+      console.log(note.id)
+      try {
+        const { data, error } = await supabase.rpc('delete_note',  
+          { auth_id : user.id, note_id : note.id})
+  
+        if (error) {
+          console.error('Error deleting note from Supabase:', error);
+          return;
+        }
+  
+        setNotebooks((prevNotebooks) => prevNotebooks.filter((notebook) => notebook.id !== note.id));
+        
+      } catch (error) {
+        console.error('Error deleting note:', error);
       }
     };
 
@@ -150,7 +188,7 @@ const Notes = ({route}) => {
         <IconButton
           {...props}
           icon="delete"
-          onPress={() => {}}
+          onPress={() => confirmDeleteNote(item)}
         />
       )}
       />

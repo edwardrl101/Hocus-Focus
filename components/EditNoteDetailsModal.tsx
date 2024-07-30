@@ -59,11 +59,13 @@ const EditNoteDetailsModal = ({ visible, onClose, note, updateDetails }) => {
             <SafeAreaView style = {{backgroundColor: '#FFFACD', flex: 1}}>
             <View style = {styles.modalHeader}>
         <Text style = {styles.modalHeaderText}> Edit Note </Text>
+        
         </View>
         <IconButton style = {styles.modalCloseButton}
         icon = "arrow-left"
         size = {30}
         onPress={handleClose}></IconButton>
+    
             
         <Text style = {styles.subheaderText}>Title</Text>
         <TextInput style = {styles.textInput}
@@ -99,12 +101,18 @@ const styles = StyleSheet.create({
         left: 5,
         color: 'white',
       },
+    deleteButton: {
+        position: 'absolute',
+        top: 40,
+        right: 20
+    },
     modalHeader: {
         backgroundColor: 'white', 
         padding: 20,
         borderTopLeftRadius: 10,
         borderTopRightRadius: 10,
         width: '100%',
+        flexDirection: 'row'
       },
     modalHeaderText: {
         fontSize: 25,

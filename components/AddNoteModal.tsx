@@ -53,7 +53,7 @@ const AddNoteModal = ({ visible, onClose, handlesSave }) => {
         onRequestClose={handleClose}>
             <SafeAreaView style = {{backgroundColor: '#FFFACD', flex: 1}}>
             <View style = {styles.modalHeader}>
-        <Text style = {styles.modalHeaderText}> New Notebook </Text>
+        <Text style = {styles.modalHeaderText}> New Note </Text>
         </View>
         <IconButton style = {styles.modalCloseButton}
         icon = "arrow-left"
