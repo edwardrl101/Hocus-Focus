@@ -4,9 +4,11 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useState } from 'react'
 
 
-const AddNoteModal = ({ visible, onClose, handleSave }) => {
+const AddNoteModal = ({ visible, onClose, handleSave, handlesSave }) => {
     const[text, setText] = useState("");
     const[isEdited, setIsEdited] = useState(false);
+    const[desc, setDesc] = useState("");
+    const[content, setContent] = useState("");
 
     const handleClose = () => {
         setText("");
@@ -15,7 +17,8 @@ const AddNoteModal = ({ visible, onClose, handleSave }) => {
 
     const handleSaveClick = () => {
         if (text.trim()) {
-          handleSave(text); // Invoke the save function with the notebook title
+          handlesSave({ text: text, desc: desc, content: content });
+          handleSave(text, desc); // Invoke the save function with the notebook title
           handleClose();
         } else {
           Alert.alert('Error', 'Notebook title cannot be empty.');
@@ -34,13 +37,20 @@ const AddNoteModal = ({ visible, onClose, handleSave }) => {
         <IconButton style = {styles.modalCloseButton}
         icon = "arrow-left"
         size = {30}
-        onPress={() => handleClose}></IconButton>
+        onPress={handleClose}></IconButton>
             
-        <Text style = {styles.subheaderText}>Notebook Title</Text>
+        <Text style = {styles.subheaderText}>Title</Text>
         <TextInput style = {styles.textInput}
         placeholder = {"Enter your title here"}
         value = {text}
         onChangeText={(value) => { setText(value); setIsEdited(true); }}/>
+        
+        <Text style = {styles.subheaderText}>Description</Text>
+        <TextInput style = {styles.textInput}
+        placeholder = {"Add a description here"}
+        value = {desc}
+        multiline = {true}
+        onChangeText={(value) => { setDesc(value); setIsEdited(true); }}/>
         
         <FAB style = {styles.fab}
         small
