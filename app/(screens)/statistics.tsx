@@ -415,11 +415,6 @@ const getDayOfWeek = (index) => {
           <Text style = {{textAlign: 'center', color: "white", fontSize: 16, fontWeight:'semibold'}}> Interrupted Productivity Sessions</Text>
           </View>
         </View>
-
-        <View style = {styles.sectionBox}>
-          <Text style = {styles.appUsage}>Things to Improve</Text>
-          <View style = {styles.underline}/>
-          </View>
       </View>
     </ScrollView>
   );
