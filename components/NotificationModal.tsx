@@ -1,11 +1,6 @@
-import { View, Text, SafeAreaView, TouchableOpacity, StyleSheet, Alert } from 'react-native'
+import React from 'react';
+import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons'
-import React, { useState } from 'react'
-import { useRouter} from 'expo-router'
-import { supabase } from '@/app/(auth)/client'
-import NotificationModal from '@/components/NotificationModal'
-
-
 
 const sections = [
     {
@@ -39,41 +34,21 @@ const sections = [
    }
 ]
 
-export default function Settings() {
+export default function NotificationModal({ visible, onClose }) {
+    return (
+        <Modal
+            transparent={true}
+            animationType="slide"
+            visible={visible}
+            onRequestClose={onClose}
+        >
+            <View style={styles.modalContainer}>
+                <View style={styles.header}>
+                    <Text style={styles.headerText}>Notifications</Text>
+                    <Text style={styles.subheaderText}>Here you can manage your notification settings.</Text>                    
+                </View>
 
-    const [notifModalVisible, setNotifModalVisible] = useState(false);
-
-    const router = useRouter();
-    const handleLogout = async () => {
-        Alert.alert(
-            "Log out of HocusFocus?",
-            "Are you sure you want to log out?",
-            [
-              {
-                text: "Cancel",
-                style: "cancel"
-              },
-              {
-                text: "Yes",
-                onPress: async () => {
-                    try{
-                        const { error } = await supabase.auth.signOut()
-                        router.push("/login");
-                    }catch (error){
-                        console.log(error);
-                    } 
-                }
-              }
-            ]
-          );
-    }
-
-    return(
-        <SafeAreaView style = {styles.container}>
-            <View style = {styles.header}>
-        <Text style = {styles.headerText}>Settings</Text>
-        </View> 
-        {sections.map(({ header, items }) => (
+                {sections.map(({ header, items }) => (
             <View style = {styles.sectionContainer} key = {header}>
                 <View>
                     <Text style = {styles.subheaderText}>{header}</Text>
@@ -83,7 +58,7 @@ export default function Settings() {
                     {items.map(({ id, icon, label }) => (
                         <TouchableOpacity
                         key={id}
-                        onPress={id === 'notification' ? () => setNotifModalVisible(true) : id === 'logout' ? handleLogout : () => {}}>
+                        onPress={() => {}}>
                         <View style = {styles.listItem}>
                         <View style = {styles.itemWrapper} key ={id}>
                             <Feather name = {icon} color = '#616161' size = {20} style = {styles.iconStyle} ></Feather>
@@ -93,18 +68,16 @@ export default function Settings() {
                         </TouchableOpacity>
                     ))}
                 </View>
-                {notifModalVisible && 
-        <NotificationModal 
-        visible={notifModalVisible} 
-        onClose={() => setNotifModalVisible(false)} />}
             </View>
         ))}
-        </SafeAreaView>
-    )
+                
+            </View>
+        </Modal>
+    );
 }
 
 const styles = StyleSheet.create({
-    container: {
+    modalContainer: {
         flex: 1,
         backgroundColor: '#f6f6f6',
     },

@@ -35,9 +35,28 @@ const NotebookList = () => {
         console.error("Error storing notebooks", e);
       }
     };
+
+    async function handleAddNote (task) {
+      try {
+        const noteid = Date.now().toString()
+        setNotebooks((prevNotebooks) => [...prevNotebooks, { id: noteid, ...notebooks }]);
   
-    const handleSave = async (title) => {
-      const newNotebook = { id: Date.now().toString(), title };
+        const { data, error } = await supabase.rpc('insert_note', 
+          { auth_id : user.id, 
+            taskname : task.task, 
+            due_date : task.dueDate, 
+            start_date: task.startDate,
+            categoryname : task.category, 
+            task_id : taskid,
+            completed_status: task.completedStatus})
+    
+      } catch (error) {
+        console.log(error);
+      }
+    };
+  
+    const handleSave = async (title, desc) => {
+      const newNotebook = { id: Date.now().toString(), title, desc };
       const updatedNotebooks = [...notebooks, newNotebook];
       setNotebooks(updatedNotebooks);
       await storeNotebooks(updatedNotebooks);
@@ -62,13 +81,22 @@ const NotebookList = () => {
       notebook.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const renderItem = ({ item }) => (
+      <List.Item
+      title = {item.title}
+      description={item.desc}
+      onPress = {() => handleSelectNotebook(item)}
+      style = {styles.listItem}
+      />
+    );
+
 
 
     return(
         <PaperProvider>
         <View style = {styles.container}>
         <List.Section>
-        <List.Subheader style = {styles.headerText}>My Notebooks</List.Subheader>
+        <List.Subheader style = {styles.headerText}>My Notes</List.Subheader>
         <Searchbar
             placeholder="Search"
             onChangeText={handleSearch}
@@ -80,6 +108,7 @@ const NotebookList = () => {
             renderItem={({ item }) => (
               <List.Item
                 title={item.title}
+                description={item.desc}
                 style={styles.listItem}
                 onPress={() => handleSelectNotebook(item)}
                 right={props => (

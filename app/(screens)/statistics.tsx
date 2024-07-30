@@ -144,6 +144,15 @@ export default function Statistics({route}) {
     setLoading(false);
   }
 
+  const getRandomColor = () => {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  };
+
   const getCompletedTasksStats = async () => { // get each category, and the number of tasks in each category
     setLoading(true);
     const { data, error } = await supabase.rpc('fetch_completed_tasks_stats', { user_uid : _uid});
@@ -209,14 +218,7 @@ export default function Statistics({route}) {
     const times = GENERATE(7);
     console.log(times);
 
-    const getRandomColor = () => {
-      const letters = '0123456789ABCDEF';
-      let color = '#';
-      for (let i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
-      }
-      return color;
-    };
+    
 
   const dataset = [
     { label: "complete", value: completedTasks, color: "#1E99F2" },
@@ -277,7 +279,7 @@ const getDayOfWeek = (index) => {
   return (
     <ScrollView>
       <View style={styles.header}>
-        <Text style={styles.titleText}>Analytics</Text>
+        <Text style={styles.titleText}>Statistics</Text>
         <Text style={styles.contentText}>Evaluate your performance over the last week!</Text>
       </View>
 
