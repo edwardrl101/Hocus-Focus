@@ -18,6 +18,21 @@ const Notes = ({route}) => {
     const [noteModalVisible, setNoteModalVisible] = useState(false);
     const [_uid, getUserID] = useState("");
 
+    const channel = supabase.channel('load_notes')
+    .on('postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'notebooks',
+        filter: `unique_id=eq.${user.id}`,
+      },
+      (payload) => {
+        console.log("load_notes:", payload);
+        loadNotes();
+  
+      }
+    ).subscribe()
+
     const loadUser = async () => { // load the user's uid
       try{
         const { data, error } = await supabase
