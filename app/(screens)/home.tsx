@@ -4,6 +4,7 @@ import { IconButton } from 'react-native-paper';
 import { Picker } from "@react-native-picker/picker";
 import { supabase } from '@/app/(auth)/client';
 import RewardModal from '@/components/RewardModal';
+import { Center } from '@gluestack-ui/themed';
 
 
 const screen = Dimensions.get('window');
@@ -152,11 +153,18 @@ export default function Home({route}) {
 
   return (
           <View style={styles.container}>
-          <View style={styles.coinBox}>
-            <Image style = {{width: 30, height: 30}}
-            source = {{uri: 'https://odecpyodlpiobahncupr.supabase.co/storage/v1/object/public/character_images/Wizards/coin.png'}}/>
-            {(coins>0) ? <Text style = {styles.coinText}>{coins}</Text> : <Text style = {styles.coinText}> </Text>}
-          </View>
+            <View style={styles.header}>
+            <View>
+              <Text style = {styles.titleText}>HocusFocus</Text>
+              <Text style ={styles.WelcomeText}>Start being productive now!</Text>
+
+            <View style={styles.coinBox}>
+              <Image style = {{width: 30, height: 30}}
+              source = {{uri: 'https://odecpyodlpiobahncupr.supabase.co/storage/v1/object/public/character_images/Wizards/coin.png'}}/>
+              {(coins>0) ? <Text style = {styles.coinText}>{coins}</Text> : <Text style = {styles.coinText}> </Text>}
+            </View>
+            </View>
+            </View>
           <StatusBar barStyle="light-content" />
           {
             isActive ? (
@@ -276,11 +284,29 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'space-around',
-    marginBottom: 100,
+    marginTop: 10,
     flexDirection: 'row',
   },
   coinText: {
     color: 'white',
     fontSize: 15,
   },
+  titleText: {
+    fontSize: 52,
+    fontFamily: 'Bigelow',
+    color: "white",
+    paddingTop: 60,
+  },
+  WelcomeText: {
+    color : "white", 
+    fontStyle: 'italic', 
+    fontSize: 15,
+  },
+  header: {
+    flexDirection: 'row', 
+    alignItems: 'flex-end',
+    justifyContent: 'flex-start',
+    width: '100%',
+    padding: 30
+  }
 });
