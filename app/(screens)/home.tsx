@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, StatusBar, TouchableOpacity, Dimensions, Platform, Image } from 'react-native';
+import { StyleSheet, Text, View, StatusBar, TouchableOpacity, Dimensions, Platform, Image, ImageBackground } from 'react-native';
 import { IconButton } from 'react-native-paper';
 import { Picker } from "@react-native-picker/picker";
 import { supabase } from '@/app/(auth)/client';
 import RewardModal from '@/components/RewardModal';
 import { Center } from '@gluestack-ui/themed';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 
 const screen = Dimensions.get('window');
@@ -149,9 +150,12 @@ export default function Home({route}) {
 
   const updateActiveTimer = async () => {
     const { data, error } = await supabase.rpc('fail_timer', {auth_id: user.id})
+    stopTimer();
   }
 
   return (
+    
+    <ImageBackground source = {require('@/assets/images/home-background.png')} resizeMode = 'stretch'>
           <View style={styles.container}>
             <View style={styles.header}>
             <View>
@@ -213,16 +217,19 @@ export default function Home({route}) {
             isFailed = {isFailed}
             duration = {parseInt((selectedMins.itemValue), 10) * 60}
             ></RewardModal>
+            
         </View>
+        </ImageBackground>
+        
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#4d3548',
+    flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-around',
+    height: '100%',
   },
   button: {
       borderWidth: 10,
@@ -232,7 +239,7 @@ const styles = StyleSheet.create({
       borderRadius: screen.width / 2,
       alignItems: 'center',
       justifyContent: 'center',
-      marginTop: 100,
+      //marginTop: 100,
   },
   buttonText: {
       fontSize: 45,
@@ -295,7 +302,7 @@ const styles = StyleSheet.create({
     fontSize: 52,
     fontFamily: 'Bigelow',
     color: "white",
-    paddingTop: 60,
+    //paddingTop: 60,
   },
   WelcomeText: {
     color : "white", 
@@ -303,10 +310,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   header: {
-    flexDirection: 'row', 
-    alignItems: 'flex-end',
-    justifyContent: 'flex-start',
+    flexDirection: 'column', 
+    alignItems: 'flex-start',
+    justifyContent: 'space-around',
     width: '100%',
+    height: '33%',
     padding: 30
   }
 });
