@@ -40,7 +40,7 @@ const AddNoteModal = ({ visible, onClose, handlesSave }) => {
     const handleSaveClick = () => {
         if (text.trim()) {
           handlesSave({ text: text, desc: desc, content: content });
-          handleClose();
+          onClose();
         } else {
           Alert.alert('Error', 'Notebook title cannot be empty.');
         }

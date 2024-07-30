@@ -42,7 +42,7 @@ const EditNoteDetailsModal = ({ visible, onClose, note, updateDetails }) => {
           try {
             const updatedNote = { ...note, title: text, desc: desc };
             await updateDetails(updatedNote); // Call the function to update the note in the database
-            handleClose(); // Close the modal after saving
+            onClose(); // Close the modal after saving
           } catch (error) {
             Alert.alert('Error', 'Failed to update the note.');
           }
