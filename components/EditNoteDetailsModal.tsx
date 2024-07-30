@@ -2,45 +2,50 @@ import { Text, View, StyleSheet, FlatList, Modal, TextInput, Button, Alert, Safe
 import { Provider as PaperProvider, Appbar, FAB, List, IconButton } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useState } from 'react'
+import { supabase } from '@/app/(auth)/client';
 
-
-const AddNoteModal = ({ visible, onClose, handlesSave }) => {
-    const[text, setText] = useState("");
+const EditNoteDetailsModal = ({ visible, onClose, note, updateDetails }) => {
+    const[text, setText] = useState(note.title);
     const[isEdited, setIsEdited] = useState(false);
-    const[desc, setDesc] = useState("");
+    const[desc, setDesc] = useState(note.desc);
     const[content, setContent] = useState("");
 
     const handleClose = () => {
-      if (isEdited) {
-        Alert.alert(
-          "Confirm",
-          "Are you sure you want to go back? All changes will be lost.",
-          [
-            {
-              text: "Cancel",
-              style: "cancel"
-            },
-            {
-              text: "OK",
-              onPress: () => {
-                setText("");
-        setDesc("");
-                onClose();
+        if (isEdited) {
+          Alert.alert(
+            "Confirm",
+            "Are you sure you want to go back? All changes will be lost.",
+            [
+              {
+                text: "Cancel",
+                style: "cancel"
+              },
+              {
+                text: "OK",
+                onPress: () => {
+                  setText(note.title);
+          setDesc(note.desc);
+                  onClose();
+                }
               }
-            }
-          ]
-        );
-      } else {
-        setText("");
-        setDesc("");
-      onClose();
-    }
-    }
+            ]
+          );
+        } else {
+          setText(note.title);
+          setDesc(note.desc);
+        onClose();
+      }
+      }
 
-    const handleSaveClick = () => {
+    const handleSaveClick = async () => {
         if (text.trim()) {
-          handlesSave({ text: text, desc: desc, content: content });
-          handleClose();
+          try {
+            const updatedNote = { ...note, title: text, desc: desc };
+            await updateDetails(updatedNote); // Call the function to update the note in the database
+            handleClose(); // Close the modal after saving
+          } catch (error) {
+            Alert.alert('Error', 'Failed to update the note.');
+          }
         } else {
           Alert.alert('Error', 'Notebook title cannot be empty.');
         }
@@ -53,7 +58,7 @@ const AddNoteModal = ({ visible, onClose, handlesSave }) => {
         onRequestClose={handleClose}>
             <SafeAreaView style = {{backgroundColor: '#FFFACD', flex: 1}}>
             <View style = {styles.modalHeader}>
-        <Text style = {styles.modalHeaderText}> New Notebook </Text>
+        <Text style = {styles.modalHeaderText}> Edit Note </Text>
         </View>
         <IconButton style = {styles.modalCloseButton}
         icon = "arrow-left"
@@ -173,4 +178,4 @@ const styles = StyleSheet.create({
     },
 })
 
-export default AddNoteModal
+export default EditNoteDetailsModal
