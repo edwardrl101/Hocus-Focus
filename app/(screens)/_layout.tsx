@@ -94,7 +94,7 @@ export default function RootLayout() {
   return (
     <Drawer.Navigator initialRouteName="Home">
      <Drawer.Screen name="Home" component={Home} initialParams={{user: _user}}/>
-     <Drawer.Screen name="Notes" component={Notes}/>
+     <Drawer.Screen name="Notes" component={Notes} initialParams={{user: _user}}/>
      <Drawer.Screen name="Planner" component={Planner} initialParams={{user: _user}}/>
      <Drawer.Screen name="Friend" component={Friends} initialParams={{user: _user}}/>
      <Drawer.Screen name="Profile" component={Profile} initialParams={{user: _user}}/>

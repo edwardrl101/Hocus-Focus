@@ -46,7 +46,7 @@ const Notes = ({route}) => {
         setNotebooks(updatedNotebooks);
         await storeNotebooks(updatedNotebooks);
     
-        const { data, error } = await supabase.rpc('insert_notess', {
+        const { data, error } = await supabase.rpc('insert_note', {
           auth_id: user.id,
           title: note.text,
           description: note.desc,
