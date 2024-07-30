@@ -23,7 +23,7 @@ const Notes = ({route}) => {
       {
         event: '*',
         schema: 'public',
-        table: 'notebooks',
+        table: 'notebook',
         filter: `unique_id=eq.${user.id}`,
       },
       (payload) => {
