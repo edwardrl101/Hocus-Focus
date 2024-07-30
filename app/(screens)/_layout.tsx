@@ -100,6 +100,8 @@ export default function RootLayout() {
      <Drawer.Screen name="Friend" component={Friends} initialParams={{user: _user}}/>
      <Drawer.Screen name="Profile" component={Profile} initialParams={{user: _user}}/>
      <Drawer.Screen name="Statistics" component ={Statistics} initialParams={{user: _user}}/>
+     <Drawer.Screen name="Store" component ={Store} initialParams={{user: _user}}/>
+     <Drawer.Screen name="Settings" component ={Settings} initialParams={{user: _user}}/>
   </Drawer.Navigator>
   );
 }
