@@ -162,11 +162,13 @@ export default function Home({route}) {
               <Text style = {styles.titleText}>HocusFocus</Text>
               <Text style ={styles.WelcomeText}>Start being productive now!</Text>
 
-            <View style={styles.coinBox}>
-              <Image style = {{width: 30, height: 30}}
-              source = {{uri: 'https://odecpyodlpiobahncupr.supabase.co/storage/v1/object/public/character_images/Wizards/coin.png'}}/>
-              {(coins>0) ? <Text style = {styles.coinText}>{coins}</Text> : <Text style = {styles.coinText}> </Text>}
-            </View>
+              <View style={styles.coinRow}>
+                <View style={styles.coinBox}>
+                  <Image style = {{width: 30, height: 30}}
+                  source = {{uri: 'https://odecpyodlpiobahncupr.supabase.co/storage/v1/object/public/character_images/Wizards/coin.png'}}/>
+                  {(coins>0) ? <Text style = {styles.coinText}>{coins}</Text> : <Text style = {styles.coinText}> </Text>}
+                </View>
+              </View>
             </View>
             </View>
           <StatusBar barStyle="light-content" />
@@ -315,6 +317,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     width: '100%',
     height: '33%',
-    padding: 30
+    padding: 30,
+    //backgroundColor: 'black',
+  },
+  coinRow:
+  {
+    //backgroundColor: "yellow",
+    height: '50%',
+    justifyContent: "center",
   }
 });
