@@ -132,6 +132,7 @@ const CompletedTasks = ({route}) => {
             <List.Subheader style = {styles.headerText}>My Completed Tasks </List.Subheader>
             <Searchbar
             placeholder="Search"
+            placeholderTextColor="black"
             onChangeText={handleSearch}
             value = {searchQuery}
             style={styles.searchBar}
