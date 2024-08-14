@@ -188,7 +188,8 @@ export default function Statistics({route}) {
 
   useEffect(() => {
     loadUser();
-    updateData(); 
+    updateData();
+    
 
     const intervalId = setInterval(() => { // Update the data every Sunday (new week)
       const today = new Date();

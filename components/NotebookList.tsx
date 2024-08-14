@@ -155,6 +155,8 @@ const styles = StyleSheet.create({
       right: 0,
       bottom: 0,
       borderRadius: 28,
+      backgroundColor: '#E1BEE7',
+      color: "#E1BEE7"
     },
     headerText: {
       fontWeight: 'bold',

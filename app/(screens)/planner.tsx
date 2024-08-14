@@ -14,7 +14,21 @@ const Planner = ({route}) => {
   
   return (
     <NavigationContainer independent = {true}>
-    <Tab.Navigator initialRouteName="TodoList">
+    <Tab.Navigator initialRouteName="TodoList"
+     screenOptions={({ route }) => ({
+      tabBarIcon: ({ color, size }) => {
+        let iconName;
+
+        if (route.name === 'TodoList') {
+          iconName = 'create-outline';
+        } else if (route.name === 'CompletedTasks') {
+          iconName = 'checkmark-done-outline'; 
+        }
+
+        return <Ionicons name={iconName} size={size} color={color} />;
+      },
+    })}>
+      
       <Tab.Screen 
         name="TodoList" 
         component={TodoList} 
