@@ -83,7 +83,7 @@ const FriendList = ({user}) => {
         <View style={styles.headerContent}>
           <Image
             style={styles.avatar}
-            source={{ uri: 'https://bootdey.com/img/Content/avatar/avatar1.png' }}
+            source={{ uri: 'https://odecpyodlpiobahncupr.supabase.co/storage/v1/object/public/character_images/Untitled%20folder/NormalWizard.png' }}
           />
           <Text style={styles.name}>{user.user_metadata.username}</Text>
           <Text style={styles.name}>uid: {_uid}</Text>

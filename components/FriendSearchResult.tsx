@@ -58,7 +58,7 @@ const FriendSearchResult = ({visible, clearSearch, onClose, my_uid, searchResult
         <View style = {styles.searchProfile}>
             <Image
                 style={styles.avatar}
-                source={{ uri: 'https://bootdey.com/img/Content/avatar/avatar1.png' }}
+                source={{ uri: 'https://odecpyodlpiobahncupr.supabase.co/storage/v1/object/public/character_images/Untitled%20folder/NormalWizard.png' }}
             />
             <Text style={styles.name}>{searchResult[0].username}</Text>
             <Text style={styles.name}>uid: {searchResult[0].uid}</Text>

@@ -257,6 +257,7 @@ const TodoList = ({route}) => {
         <List.Subheader style = {styles.headerText} >My Active Tasks</List.Subheader>
         <Searchbar
             placeholder="Search"
+            placeholderTextColor="black"
             onChangeText={handleSearch}
             value={searchQuery}
             style={styles.searchBar}
@@ -349,7 +350,8 @@ const styles = StyleSheet.create({
     marginBottom: 20
   },
   searchBar: {
-    backgroundColor: 'transparent'
+    backgroundColor: 'transparent',
+    
   }
 })
 
